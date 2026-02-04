@@ -1,14 +1,36 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Heart, Plus, Clock, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import {
+  Play,
+  Pause,
+  Heart,
+  Plus,
+  Clock,
+  TrendingUp,
+  Music2,
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
+import { useState } from "react";
+import { usePlayer, type PlayerTrack } from "@/lib/player";
 
-const recentlyPlayed = [
-  { id: 1, title: "Midnight Dreams", artist: "Luna Eclipse", album: "Nocturnal", duration: "3:45", plays: "1.2M" },
-  { id: 2, title: "Electric Pulse", artist: "Synthwave Masters", album: "Neon Nights", duration: "4:12", plays: "890K" },
-  { id: 3, title: "Ocean Waves", artist: "Ambient Collective", album: "Serenity", duration: "5:20", plays: "2.1M" },
-  { id: 4, title: "City Lights", artist: "Urban Beats", album: "Metropolis", duration: "3:58", plays: "1.5M" },
-];
+type Track = PlayerTrack;
+
+function formatDuration(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
 
 const aiRecommendations = [
   { id: 1, title: "Cosmic Journey", artist: "Space Explorers", genre: "Electronic", confidence: 95 },
@@ -25,6 +47,31 @@ const playlists = [
 ];
 
 export default function Dashboard() {
+  const [search, setSearch] = useState("");
+  const {
+    currentTrack,
+    isPlaying,
+    progress,
+    duration,
+    volume,
+    playTrack,
+    togglePlay,
+    seek,
+    setVolume,
+  } = usePlayer();
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["tracks", search],
+    queryFn: async () => {
+      const res = await apiFetch(
+        `/jamendo/tracks?limit=12${search ? `&search=${encodeURIComponent(search)}` : ""}`
+      );
+      return res.tracks as Track[];
+    },
+  });
+
+  const recentTracks = data?.slice(0, 6) || [];
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -74,25 +121,93 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Recently Played */}
+      {/* Library */}
       <div>
-        <h2 className="text-2xl font-bold mb-4 text-foreground">Recently Played</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Your Library</h2>
+            <p className="text-sm text-muted-foreground">Tap a track to play instantly</p>
+          </div>
+          <Badge variant="outline" className="text-xs">Jamendo</Badge>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search library..."
+            className="h-9 max-w-sm"
+          />
+        </div>
         <Card className="bg-card border-border">
           <div className="divide-y divide-border">
-            {recentlyPlayed.map((track) => (
-              <div key={track.id} className="p-4 hover:bg-muted/50 transition-all group">
+            {isLoading && (
+              <div className="p-4 text-sm text-muted-foreground">Loading tracks...</div>
+            )}
+            {isError && (
+              <div className="p-4 text-sm text-destructive">
+                Failed to load tracks. Make sure the API is running.
+              </div>
+            )}
+            {!isLoading && !isError && recentTracks.length === 0 && (
+              <div className="p-4 text-sm text-muted-foreground">
+                No tracks found.
+              </div>
+            )}
+            {recentTracks.map((track) => (
+              <div
+                key={track.id}
+                className="p-4 hover:bg-muted/50 transition-all group"
+              >
                 <div className="flex items-center gap-4">
-                  <Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Play className="h-4 w-4" />
-                  </Button>
+                  <div className="relative h-14 w-14 shrink-0 rounded-md overflow-hidden bg-muted">
+                    {track.image_url ? (
+                      <img
+                        src={track.image_url}
+                        alt={track.title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                        <Music2 className="h-6 w-6" />
+                      </div>
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => playTrack(track, recentTracks)}
+                      className="absolute inset-0 m-auto h-9 w-9 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      {currentTrack?.id === track.id && isPlaying ? (
+                        <Pause className="h-4 w-4" />
+                      ) : (
+                        <Play className="h-4 w-4 ml-0.5" />
+                      )}
+                    </Button>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate">{track.title}</p>
                     <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
+                    {track.license_url && (
+                      <p className="text-xs text-muted-foreground">
+                        License:{" "}
+                        <a
+                          href={track.license_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline"
+                        >
+                          {track.license_url}
+                        </a>
+                      </p>
+                    )}
                   </div>
                   <div className="hidden md:block text-sm text-muted-foreground">
-                    {track.album}
+                    {track.album || "Single"}
                   </div>
-                  <div className="text-sm text-muted-foreground">{track.duration}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatDuration(track.duration_sec)}
+                  </div>
                   <Button size="icon" variant="ghost">
                     <Heart className="h-4 w-4" />
                   </Button>
@@ -101,6 +216,68 @@ export default function Dashboard() {
             ))}
           </div>
         </Card>
+
+        {currentTrack && (
+          <Card className="mt-4 bg-gradient-card border-border p-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="h-14 w-14 rounded-md overflow-hidden bg-muted shrink-0">
+                  {currentTrack.image_url ? (
+                    <img
+                      src={currentTrack.image_url}
+                      alt={currentTrack.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                      <Music2 className="h-6 w-6" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground truncate">{currentTrack.title}</p>
+                  <p className="text-sm text-muted-foreground truncate">{currentTrack.artist}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button size="icon" variant="ghost" onClick={togglePlay}>
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </Button>
+                <Button size="icon" variant="ghost">
+                  <Heart className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <Slider
+                value={[progress]}
+                max={duration || 1}
+                step={1}
+                onValueChange={(value) => {
+                  const next = value[0] ?? 0;
+                  seek(next);
+                }}
+              />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{formatTime(progress)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">Volume</span>
+              <Slider
+                value={[Math.round(volume * 100)]}
+                onValueChange={(value) => setVolume((value[0] ?? 0) / 100)}
+                max={100}
+                step={1}
+                className="max-w-[180px]"
+              />
+            </div>
+          </Card>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
