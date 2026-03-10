@@ -36,7 +36,7 @@ export default function Auth() {
         setToken(data.token);
         setUser(data.user);
       }
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed");
     } finally {

@@ -30,7 +30,7 @@ export default function Landing() {
             Discover personalized recommendations, generate unique tracks, and experience music like never before
           </p>
           <div className="flex gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
-            <Link to="/dashboard">
+            <Link to="/">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow-primary">
                 Get Started
               </Button>

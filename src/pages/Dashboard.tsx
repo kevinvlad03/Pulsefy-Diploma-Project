@@ -14,8 +14,12 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePlayer, type PlayerTrack } from "@/lib/player";
+import { getToken, getUser } from "@/lib/auth";
+import { useNavigate } from "react-router-dom";
+import { getDailyOffset, getMixSalt, getPagedOffset, refreshMixSalt } from "@/lib/recommendations";
+import { mixTracksByGenre } from "@/lib/track-mix";
 
 type Track = PlayerTrack;
 
@@ -48,6 +52,9 @@ const playlists = [
 
 export default function Dashboard() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [mixSalt, setMixSalt] = useState(() => getMixSalt("dashboard"));
+  const navigate = useNavigate();
   const {
     currentTrack,
     isPlaying,
@@ -60,17 +67,50 @@ export default function Dashboard() {
     setVolume,
   } = usePlayer();
 
+  const user = getUser();
+  const isAuthenticated = Boolean(getToken());
+  const seed = `${user?.id || user?.email || "anon"}:dashboard:${mixSalt}`;
+  const limit = 12;
+  const requestLimit = isAuthenticated ? limit : 48;
+  const baseOffset = getDailyOffset(seed, limit, 30);
+  const offset = getPagedOffset(baseOffset, page, limit, 30);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search]);
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["tracks", search],
+    queryKey: ["tracks", search, offset, isAuthenticated],
     queryFn: async () => {
       const res = await apiFetch(
-        `/jamendo/tracks?limit=12${search ? `&search=${encodeURIComponent(search)}` : ""}`
+        `/jamendo/tracks?limit=${requestLimit}&offset=${offset}${search ? `&search=${encodeURIComponent(search)}` : ""}`
       );
       return res.tracks as Track[];
     },
   });
 
-  const recentTracks = data?.slice(0, 6) || [];
+  const mixedTracks = useMemo(() => {
+    const base = data || [];
+    if (isAuthenticated) return base;
+    return mixTracksByGenre(base, limit);
+  }, [data, isAuthenticated]);
+  const recentTracks = mixedTracks.slice(0, 6);
+
+  const handlePlayTrack = (track: Track) => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+      return;
+    }
+    playTrack(track, recentTracks);
+  };
+
+  const handleTogglePlay = () => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+      return;
+    }
+    togglePlay();
+  };
 
   return (
     <div className="space-y-8">
@@ -126,9 +166,15 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Your Library</h2>
-            <p className="text-sm text-muted-foreground">Tap a track to play instantly</p>
+            <p className="text-sm text-muted-foreground">
+              {isAuthenticated
+                ? "Tap a track to play instantly"
+                : "Guest mode: browse diverse genres, sign in to play"}
+            </p>
           </div>
-          <Badge variant="outline" className="text-xs">Jamendo</Badge>
+          <Badge variant="outline" className="text-xs">
+            {isAuthenticated ? "Jamendo" : "Guest Mix"}
+          </Badge>
         </div>
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <Input
@@ -137,6 +183,34 @@ export default function Dashboard() {
             placeholder="Search library..."
             className="h-9 max-w-sm"
           />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setMixSalt(refreshMixSalt("dashboard"));
+              setPage(0);
+            }}
+          >
+            Refresh Mix
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+              disabled={page === 0}
+            >
+              Prev
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPage((prev) => prev + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
         <Card className="bg-card border-border">
           <div className="divide-y divide-border">
@@ -175,7 +249,7 @@ export default function Dashboard() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => playTrack(track, recentTracks)}
+                      onClick={() => handlePlayTrack(track)}
                       className="absolute inset-0 m-auto h-9 w-9 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       {currentTrack?.id === track.id && isPlaying ? (
@@ -241,7 +315,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button size="icon" variant="ghost" onClick={togglePlay}>
+                <Button size="icon" variant="ghost" onClick={handleTogglePlay}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
                 <Button size="icon" variant="ghost">
@@ -291,7 +365,16 @@ export default function Dashboard() {
             <div className="p-6 space-y-4">
               {aiRecommendations.map((track) => (
                 <div key={track.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-all group">
-                  <Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        navigate("/auth");
+                      }
+                    }}
+                  >
                     <Play className="h-4 w-4" />
                   </Button>
                   <div className="flex-1 min-w-0">

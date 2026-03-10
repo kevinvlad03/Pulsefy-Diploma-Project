@@ -1,18 +1,23 @@
-import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Slider } from "@/components/ui/slider";
-import { Link } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { clearToken, clearUser, getUser } from "@/lib/auth";
 import { usePlayer } from "@/lib/player";
 import {
   Home,
-  Music,
   Sparkles,
-  TestTube,
   Settings,
   Search,
   Menu,
@@ -25,22 +30,23 @@ import {
   Repeat,
   Volume2,
   Music2,
+  LogOut,
 } from "lucide-react";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
-  { to: "/dashboard", label: "Dashboard", icon: Music },
-  { to: "/player", label: "Player", icon: Music },
   { to: "/ai-recommendations", label: "AI Recommendations", icon: Sparkles },
   { to: "/ai-generator", label: "Song Generator", icon: Sparkles },
-  { to: "/test", label: "Test Lab", icon: TestTube },
-  { to: "/admin", label: "Admin", icon: Settings },
+  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 export const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
-  const isLanding = location.pathname === "/";
+  const navigate = useNavigate();
+  const [searchInput, setSearchInput] = useState("");
+  const [searchDirty, setSearchDirty] = useState(false);
+  const isLanding = location.pathname === "/about";
   const user = getUser();
   const {
     currentTrack,
@@ -59,9 +65,57 @@ export const Layout = () => {
     setVolume,
   } = usePlayer();
 
+  useEffect(() => {
+    const query = new URLSearchParams(location.search).get("q") || "";
+    setSearchInput(query);
+    setSearchDirty(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!searchDirty) return;
+    const nextQuery = searchInput.trim();
+    const currentQuery = new URLSearchParams(location.search).get("q") || "";
+    if (nextQuery === currentQuery && location.pathname === "/") return;
+
+    const timeoutId = window.setTimeout(() => {
+      const params = new URLSearchParams();
+      if (nextQuery) {
+        params.set("q", nextQuery);
+      }
+      navigate(
+        {
+          pathname: "/",
+          search: params.toString() ? `?${params.toString()}` : "",
+        },
+        { replace: true }
+      );
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [location.pathname, location.search, navigate, searchDirty, searchInput]);
+
   if (isLanding) {
     return <Outlet />;
   }
+
+  const handleSignOut = () => {
+    clearToken();
+    clearUser();
+    navigate("/auth");
+  };
+
+  const handleTopSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    const query = searchInput.trim();
+    if (query) {
+      params.set("q", query);
+    }
+    navigate({
+      pathname: "/",
+      search: params.toString() ? `?${params.toString()}` : "",
+    });
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -111,32 +165,55 @@ export const Layout = () => {
         {/* Top Bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card/80 backdrop-blur-sm px-6">
           <div className="flex-1 flex items-center gap-4">
-            <div className="relative max-w-md w-full">
+            <form className="relative max-w-md w-full" onSubmit={handleTopSearch}>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                value={searchInput}
+                onChange={(event) => {
+                  setSearchDirty(true);
+                  setSearchInput(event.target.value);
+                }}
                 placeholder="Search songs, artists, playlists..."
                 className="pl-10 bg-background/50 border-border"
               />
-            </div>
+            </form>
           </div>
           {user ? (
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  clearToken();
-                  clearUser();
-                }}
-              >
-                Sign out
-              </Button>
-              <Avatar className="h-9 w-9 border-2 border-primary">
-                <AvatarFallback className="bg-gradient-primary text-white">
-                  {user.name?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-10 px-2 gap-2 hover:bg-muted">
+                  <Avatar className="h-9 w-9 border-2 border-primary">
+                    <AvatarFallback className="bg-gradient-primary text-white">
+                      {user.name?.[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden md:inline text-sm text-foreground truncate max-w-[160px]">
+                    {user.name || user.email}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="space-y-1">
+                  <p className="text-sm font-medium leading-none">{user.name || "User"}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/")}>
+                  Home
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/ai-generator")}>
+                  AI Song Generator
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link to="/auth">
               <Button size="sm" className="bg-primary hover:bg-primary/90">

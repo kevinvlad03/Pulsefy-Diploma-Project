@@ -1,0 +1,31 @@
+# Core runtime pinned to the versions validated in this project.
+torch==2.1.0
+torchaudio==2.1.0
+transformers==4.38.2
+numpy<2
+
+# Audiocraft + required runtime deps.
+audiocraft==1.3.0
+sentencepiece
+einops
+hydra-core
+hydra-colorlog
+num2words
+huggingface-hub<1
+julius
+flashy
+soundfile
+spacy
+demucs
+encodec
+gradio
+librosa
+protobuf
+torchmetrics
+torchtext==0.16.0
+torchvision==0.16.0
+
+# Note:
+# - `av` and `xformers` are intentionally not installed on this macOS setup.
+# - Compatibility shims are provided in `server/musicgen/av.py` and
+#   `server/musicgen/xformers/`.

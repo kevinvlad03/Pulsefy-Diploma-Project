@@ -7,6 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { apiFetch } from "@/lib/api";
+import { getToken } from "@/lib/auth";
 
 export type PlayerTrack = {
   id: string;
@@ -47,6 +49,8 @@ const PlayerContext = createContext<PlayerContextValue | null>(null);
 
 export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastProgressBucketRef = useRef<string | null>(null);
+  const startLoggedRef = useRef<string | null>(null);
   const [queue, setQueue] = useState<PlayerTrack[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,30 +83,41 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
       .catch(() => setIsPlaying(false));
   }, [currentTrack]);
 
+  const logListeningEvent = useCallback(
+    async (track: PlayerTrack, secondsListened: number) => {
+      if (!getToken()) return;
+      const audioUrl = track.audio_url;
+      if (!audioUrl) return;
+      const payload = {
+        trackId: isUuid(track.id) ? track.id : undefined,
+        secondsListened: Math.max(0, Math.floor(secondsListened)),
+        track: {
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          genre: track.genre,
+          duration_sec: Math.max(0, Math.floor(track.duration_sec || 0)),
+          audio_url: audioUrl,
+          cover_url: track.image_url,
+        },
+      };
+
+      try {
+        await apiFetch("/listening-events", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } catch {
+        // Keep playback resilient if telemetry fails.
+      }
+    },
+    []
+  );
+
   const setQueueAndPlay = useCallback((tracks: PlayerTrack[], index: number) => {
     setQueue(tracks);
     setCurrentIndex(index);
   }, []);
-
-  const playTrack = useCallback(
-    (track: PlayerTrack, nextQueue?: PlayerTrack[]) => {
-      if (!track.audio_url) return;
-      if (nextQueue && nextQueue.length) {
-        const idx = nextQueue.findIndex((item) => item.id === track.id);
-        setQueue(nextQueue);
-        setCurrentIndex(idx >= 0 ? idx : 0);
-        return;
-      }
-      const idx = queue.findIndex((item) => item.id === track.id);
-      if (idx >= 0) {
-        setCurrentIndex(idx);
-        return;
-      }
-      setQueue([track]);
-      setCurrentIndex(0);
-    },
-    [queue]
-  );
 
   const togglePlay = useCallback(async () => {
     const audio = audioRef.current;
@@ -119,6 +134,30 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
       setIsPlaying(false);
     }
   }, [currentTrack, isPlaying]);
+
+  const playTrack = useCallback(
+    (track: PlayerTrack, nextQueue?: PlayerTrack[]) => {
+      if (!track.audio_url) return;
+      if (currentTrack?.id === track.id) {
+        togglePlay();
+        return;
+      }
+      if (nextQueue && nextQueue.length) {
+        const idx = nextQueue.findIndex((item) => item.id === track.id);
+        setQueue(nextQueue);
+        setCurrentIndex(idx >= 0 ? idx : 0);
+        return;
+      }
+      const idx = queue.findIndex((item) => item.id === track.id);
+      if (idx >= 0) {
+        setCurrentIndex(idx);
+        return;
+      }
+      setQueue([track]);
+      setCurrentIndex(0);
+    },
+    [currentTrack, queue, togglePlay]
+  );
 
   const seek = useCallback((seconds: number) => {
     const audio = audioRef.current;
@@ -172,6 +211,9 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
     const handleTimeUpdate = () => setProgress(audio.currentTime);
     const handleLoaded = () => setDuration(audio.duration || 0);
     const handleEnded = () => {
+      if (currentTrack) {
+        void logListeningEvent(currentTrack, duration || progress);
+      }
       if (repeatMode === "one") {
         audio.currentTime = 0;
         audio.play().catch(() => setIsPlaying(false));
@@ -201,7 +243,25 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
       audio.removeEventListener("loadedmetadata", handleLoaded);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [currentIndex, isShuffle, next, queue.length, repeatMode]);
+  }, [currentIndex, currentTrack, duration, isShuffle, logListeningEvent, next, progress, queue.length, repeatMode]);
+
+  useEffect(() => {
+    if (!currentTrack?.audio_url) return;
+    if (startLoggedRef.current === currentTrack.id) return;
+    startLoggedRef.current = currentTrack.id;
+    lastProgressBucketRef.current = null;
+    void logListeningEvent(currentTrack, 0);
+  }, [currentTrack, logListeningEvent]);
+
+  useEffect(() => {
+    if (!currentTrack?.audio_url || !isPlaying) return;
+    const bucket = Math.floor(progress / 30);
+    const bucketKey = `${currentTrack.id}:${bucket}`;
+    if (progress <= 0 || lastProgressBucketRef.current === bucketKey) return;
+    if (progress % 30 > 0.8) return;
+    lastProgressBucketRef.current = bucketKey;
+    void logListeningEvent(currentTrack, progress);
+  }, [currentTrack, isPlaying, logListeningEvent, progress]);
 
   const toggleShuffle = useCallback(() => {
     setIsShuffle((prev) => !prev);
@@ -269,3 +329,9 @@ export const usePlayer = () => {
   }
   return ctx;
 };
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}

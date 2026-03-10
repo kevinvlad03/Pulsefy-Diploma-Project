@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.venv/
+server/musicgen/.venv/
+server/musicgen/.venv_py312_backup/
