@@ -207,55 +207,65 @@ export default function Home() {
             <Badge variant="outline" className="text-xs">Daily Mix</Badge>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {isLoading && (
-              <Card className="p-4 bg-card border-border text-sm text-muted-foreground">
-                Loading tracks...
+            {isLoading && Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="p-4 bg-gradient-card border-border">
+                <div className="h-40 rounded-lg bg-muted animate-pulse" />
+                <div className="mt-3 space-y-2">
+                  <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                  <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+                </div>
               </Card>
-            )}
+            ))}
             {isError && (
-              <Card className="p-4 bg-card border-border text-sm text-destructive">
+              <Card className="p-4 bg-card border-border text-sm text-destructive col-span-full">
                 Failed to load tracks.
               </Card>
             )}
             {!isLoading && !isError && continueListening.length === 0 && (
-              <Card className="p-4 bg-card border-border text-sm text-muted-foreground">
-                No tracks found.
-              </Card>
+              <Card className="p-4 bg-card border-border text-sm text-muted-foreground">No tracks found.</Card>
             )}
-            {continueListening.map((track) => (
-              <Card key={track.id} className="p-4 bg-gradient-card border-border group">
-                <div className="relative h-40 rounded-lg overflow-hidden bg-muted">
-                  {track.image_url ? (
-                    <img
-                      src={track.image_url}
-                      alt={track.title}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                      <Music2 className="h-6 w-6" />
-                    </div>
-                  )}
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handlePlayTrack(track)}
-                    className="absolute inset-0 m-auto h-10 w-10 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    {currentTrack?.id === track.id && isPlaying ? (
-                      <Pause className="h-4 w-4" />
+            {continueListening.map((track, i) => {
+              const isActive = currentTrack?.id === track.id;
+              return (
+                <Card
+                  key={track.id}
+                  className={`p-4 bg-gradient-card border-border group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-glow-primary ${
+                    isActive ? "border-primary/50 shadow-glow-primary" : ""
+                  } animate-in fade-in slide-in-from-bottom-3 duration-500`}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                  onClick={() => handlePlayTrack(track)}
+                >
+                  <div className="relative h-40 rounded-lg overflow-hidden bg-muted">
+                    {track.image_url ? (
+                      <img src={track.image_url} alt={track.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                     ) : (
-                      <Play className="h-4 w-4 ml-0.5" />
+                      <div className="h-full w-full flex items-center justify-center bg-gradient-card">
+                        <Music2 className="h-8 w-8 text-primary/40" />
+                      </div>
                     )}
-                  </Button>
-                </div>
-                <div className="mt-3">
-                  <p className="font-semibold text-foreground truncate">{track.title}</p>
-                  <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
-                </div>
-              </Card>
-            ))}
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300" />
+                    <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isActive && isPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                      <div className="h-11 w-11 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-glow-primary">
+                        {isActive && isPlaying ? <Pause className="h-4 w-4 text-white" /> : <Play className="h-4 w-4 text-white ml-0.5" />}
+                      </div>
+                    </div>
+                    {isActive && isPlaying && (
+                      <div className="absolute top-2 right-2 flex items-end gap-[2px] h-4">
+                        <span className="w-[3px] bg-primary rounded-full h-2 animate-wave-1" />
+                        <span className="w-[3px] bg-secondary rounded-full h-3 animate-wave-2" />
+                        <span className="w-[3px] bg-primary rounded-full h-4 animate-wave-3" />
+                        <span className="w-[3px] bg-secondary rounded-full h-2 animate-wave-4" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <p className={`font-semibold truncate ${isActive ? "text-primary" : "text-foreground"}`}>{track.title}</p>
+                    <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}
@@ -293,45 +303,50 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-foreground">Trending Now</h2>
               <Badge className="bg-primary/10 text-primary border-primary">Fresh</Badge>
             </div>
-            <Card className="bg-card border-border">
-              <div className="divide-y divide-border">
-                {trending.map((track) => (
-                  <div key={track.id} className="p-4 flex items-center gap-4 group hover:bg-muted/50 transition-all">
-                    <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted shrink-0">
-                      {track.image_url ? (
-                        <img
-                          src={track.image_url}
-                          alt={track.title}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                          <Music2 className="h-5 w-5" />
-                        </div>
-                      )}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handlePlayTrack(track)}
-                        className="absolute inset-0 m-auto h-8 w-8 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        {currentTrack?.id === track.id && isPlaying ? (
-                          <Pause className="h-3.5 w-3.5" />
+            <Card className="bg-card border-border overflow-hidden">
+              <div className="divide-y divide-border/60">
+                {trending.map((track, i) => {
+                  const isActive = currentTrack?.id === track.id;
+                  return (
+                    <div
+                      key={track.id}
+                      className={`flex items-center gap-3 px-4 py-3 group cursor-pointer transition-all duration-200 hover:bg-muted/40 ${isActive ? "bg-primary/5" : ""}`}
+                      onClick={() => handlePlayTrack(track)}
+                    >
+                      {/* Row number / playing indicator */}
+                      <div className="w-5 shrink-0 text-center">
+                        {isActive && isPlaying ? (
+                          <div className="flex items-end justify-center gap-[2px] h-4">
+                            <span className="w-[2px] bg-primary rounded-full h-1.5 animate-wave-1" />
+                            <span className="w-[2px] bg-secondary rounded-full h-3 animate-wave-2" />
+                            <span className="w-[2px] bg-primary rounded-full h-4 animate-wave-3" />
+                          </div>
                         ) : (
-                          <Play className="h-3.5 w-3.5 ml-0.5" />
+                          <span className="text-xs text-muted-foreground group-hover:hidden">{i + 1}</span>
                         )}
+                        {!(isActive && isPlaying) && (
+                          <Play className="h-3 w-3 text-primary hidden group-hover:block mx-auto" />
+                        )}
+                      </div>
+                      <div className="relative h-10 w-10 rounded-md overflow-hidden bg-muted shrink-0">
+                        {track.image_url ? (
+                          <img src={track.image_url} alt={track.title} className="h-full w-full object-cover" loading="lazy" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-gradient-card">
+                            <Music2 className="h-4 w-4 text-primary/50" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-medium text-sm truncate ${isActive ? "text-primary" : "text-foreground"}`}>{track.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+                      </div>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        <Heart className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{track.title}</p>
-                      <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
-                    </div>
-                    <Button size="icon" variant="ghost">
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           </div>
@@ -374,64 +389,65 @@ export default function Home() {
         </div>
         <Card className="bg-card border-border">
           <div className="divide-y divide-border">
-          {isLoading && (
-            <div className="p-4 text-sm text-muted-foreground">
-              Loading tracks...
+          {isLoading && Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 p-4">
+              <div className="h-12 w-12 rounded-md bg-muted animate-pulse shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+                <div className="h-3 bg-muted rounded animate-pulse w-1/3" />
+              </div>
             </div>
-          )}
+          ))}
           {isError && (
-            <div className="p-4 text-sm text-destructive">
-              Failed to load tracks.
-            </div>
+            <div className="p-4 text-sm text-destructive">Failed to load tracks.</div>
           )}
           {!isLoading && !isError && catalogTracks.length === 0 && (
             <div className="p-4 text-sm text-muted-foreground">
               {isSearching ? "No tracks match your search." : "No tracks found."}
             </div>
           )}
-          {catalogTracks.map((track) => (
-            <div key={track.id} className="p-4 hover:bg-muted/50 transition-all group">
-              <div className="flex items-center gap-4">
-                <div className="relative h-14 w-14 shrink-0 rounded-md overflow-hidden bg-muted">
-                {track.image_url ? (
-                  <img
-                    src={track.image_url}
-                    alt={track.title}
-                      className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                    <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                      <Music2 className="h-6 w-6" />
+          {catalogTracks.map((track) => {
+            const isActive = currentTrack?.id === track.id;
+            return (
+              <div
+                key={track.id}
+                className={`flex items-center gap-4 px-4 py-3 group cursor-pointer transition-all duration-200 hover:bg-muted/40 ${isActive ? "bg-primary/5" : ""}`}
+                onClick={() => handlePlayTrack(track)}
+              >
+                <div className="relative h-12 w-12 shrink-0 rounded-md overflow-hidden bg-muted">
+                  {track.image_url ? (
+                    <img src={track.image_url} alt={track.title} className="h-full w-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-gradient-card">
+                      <Music2 className="h-5 w-5 text-primary/40" />
                     </div>
                   )}
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handlePlayTrack(track)}
-                    className="absolute inset-0 m-auto h-9 w-9 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    {currentTrack?.id === track.id && isPlaying ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4 ml-0.5" />
-                    )}
-                  </Button>
+                  <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-200 ${isActive && isPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                    {isActive && isPlaying
+                      ? <Pause className="h-4 w-4 text-white" />
+                      : <Play className="h-4 w-4 text-white ml-0.5" />}
+                  </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground truncate">{track.title}</p>
+                  <p className={`font-medium truncate ${isActive ? "text-primary" : "text-foreground"}`}>{track.title}</p>
                   <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {track.album || "Single"}
-                    {track.genre ? ` · ${track.genre}` : ""}
+                  <p className="text-xs text-muted-foreground/70 truncate">
+                    {track.album || "Single"}{track.genre ? ` · ${track.genre}` : ""}
                   </p>
                 </div>
-                <Button size="icon" variant="ghost">
+                {isActive && isPlaying && (
+                  <div className="flex items-end gap-[2px] h-4 shrink-0">
+                    <span className="w-[2px] bg-primary rounded-full h-1.5 animate-wave-1" />
+                    <span className="w-[2px] bg-secondary rounded-full h-3 animate-wave-2" />
+                    <span className="w-[2px] bg-primary rounded-full h-4 animate-wave-3" />
+                  </div>
+                )}
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                   <Heart className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-          ))}
+            );
+          })}
           </div>
         </Card>
       </div>

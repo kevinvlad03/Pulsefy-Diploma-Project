@@ -96,51 +96,55 @@ export default function AIRecommendations() {
           </Card>
         )}
 
-      <div className="grid gap-4">
-        {(recommendationsQuery.data || []).map((item) => (
-          <Card key={item.id} className="p-5 bg-gradient-card border-border">
-            <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 rounded-md overflow-hidden bg-muted shrink-0">
-                {item.track.image_url ? (
-                  <img
-                    src={item.track.image_url}
-                    alt={item.track.title}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                    <Music2 className="h-5 w-5" />
+      <div className="grid gap-3">
+        {(recommendationsQuery.data || []).map((item, i) => {
+          const isActive = currentTrack?.id === item.track.id;
+          return (
+            <Card
+              key={item.id}
+              className={`p-4 bg-gradient-card border-border group cursor-pointer transition-all duration-300 hover:border-primary/40 hover:shadow-glow-primary animate-in fade-in slide-in-from-bottom-3 duration-500 ${
+                isActive ? "border-primary/50 bg-primary/5" : ""
+              }`}
+              style={{ animationDelay: `${i * 50}ms` }}
+              onClick={() => playTrack(item.track, queue)}
+            >
+              <div className="flex items-center gap-4">
+                <div className="relative h-14 w-14 rounded-xl overflow-hidden bg-muted shrink-0">
+                  {item.track.image_url ? (
+                    <img src={item.track.image_url} alt={item.track.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-gradient-card">
+                      <Music2 className="h-5 w-5 text-primary/50" />
+                    </div>
+                  )}
+                  <div className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-200 ${isActive && isPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                    {isActive && isPlaying ? <Pause className="h-4 w-4 text-white" /> : <Play className="h-4 w-4 text-white ml-0.5" />}
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className={`font-semibold truncate ${isActive ? "text-primary" : "text-foreground"}`}>{item.track.title}</p>
+                  <p className="text-sm text-muted-foreground truncate">{item.track.artist}</p>
+                  <p className="text-xs text-muted-foreground/80 mt-0.5 line-clamp-1">{item.reason}</p>
+                </div>
+
+                {item.track.genre && (
+                  <Badge variant="outline" className="hidden md:inline-flex shrink-0 text-xs">
+                    {item.track.genre}
+                  </Badge>
+                )}
+
+                {isActive && isPlaying && (
+                  <div className="flex items-end gap-[2px] h-4 shrink-0">
+                    <span className="w-[2px] bg-primary rounded-full h-1.5 animate-wave-1" />
+                    <span className="w-[2px] bg-secondary rounded-full h-3 animate-wave-2" />
+                    <span className="w-[2px] bg-primary rounded-full h-4 animate-wave-3" />
                   </div>
                 )}
               </div>
-
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate">{item.track.title}</p>
-                <p className="text-sm text-muted-foreground truncate">{item.track.artist}</p>
-                <p className="text-xs text-muted-foreground mt-1">{item.reason}</p>
-              </div>
-
-              {item.track.genre && (
-                <Badge variant="outline" className="hidden md:inline-flex">
-                  {item.track.genre}
-                </Badge>
-              )}
-
-              <Button
-                size="icon"
-                onClick={() => playTrack(item.track, queue)}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {currentTrack?.id === item.track.id && isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4 ml-0.5" />
-                )}
-              </Button>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       <Card className="p-4 bg-secondary/5 border-secondary">

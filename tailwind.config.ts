@@ -64,6 +64,7 @@ export default {
         'gradient-hero': 'var(--gradient-hero)',
         'gradient-card': 'var(--gradient-card)',
         'gradient-studio': 'var(--gradient-studio)',
+        'gradient-sidebar': 'var(--gradient-sidebar)',
       },
       boxShadow: {
         'glow-primary': 'var(--glow-primary)',

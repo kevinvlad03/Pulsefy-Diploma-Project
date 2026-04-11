@@ -82,14 +82,9 @@ export const Layout = () => {
 
     const timeoutId = window.setTimeout(() => {
       const params = new URLSearchParams();
-      if (nextQuery) {
-        params.set("q", nextQuery);
-      }
+      if (nextQuery) params.set("q", nextQuery);
       navigate(
-        {
-          pathname: "/",
-          search: params.toString() ? `?${params.toString()}` : "",
-        },
+        { pathname: "/", search: params.toString() ? `?${params.toString()}` : "" },
         { replace: true }
       );
     }, 250);
@@ -97,9 +92,7 @@ export const Layout = () => {
     return () => window.clearTimeout(timeoutId);
   }, [location.pathname, location.search, navigate, searchDirty, searchInput]);
 
-  if (isLanding) {
-    return <Outlet />;
-  }
+  if (isLanding) return <Outlet />;
 
   const handleSignOut = () => {
     clearToken();
@@ -111,112 +104,130 @@ export const Layout = () => {
     event.preventDefault();
     const params = new URLSearchParams();
     const query = searchInput.trim();
-    if (query) {
-      params.set("q", query);
-    }
-    navigate({
-      pathname: "/",
-      search: params.toString() ? `?${params.toString()}` : "",
-    });
+    if (query) params.set("q", query);
+    navigate({ pathname: "/", search: params.toString() ? `?${params.toString()}` : "" });
   };
+
+  const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      {/* Sidebar */}
+
+      {/* ── SIDEBAR ── */}
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ${
+        className={`fixed left-0 top-0 z-40 h-screen border-r border-sidebar-border transition-all duration-300 flex flex-col ${
           isSidebarOpen ? "w-64" : "w-20"
         }`}
+        style={{ background: "var(--gradient-sidebar)" }}
       >
-        <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
+        {/* Logo */}
+        <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border/60 shrink-0">
           {isSidebarOpen && (
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Pulsefy
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black bg-gradient-primary bg-clip-text text-transparent tracking-tight">
+                Pulsefy
+              </h1>
+              {isPlaying && (
+                <div className="flex items-end gap-[2px] h-3">
+                  <span className="w-[2px] bg-primary rounded-full h-1.5 animate-wave-1" />
+                  <span className="w-[2px] bg-secondary rounded-full h-2.5 animate-wave-2" />
+                  <span className="w-[2px] bg-primary rounded-full h-3 animate-wave-3" />
+                  <span className="w-[2px] bg-secondary rounded-full h-1.5 animate-wave-4" />
+                </div>
+              )}
+            </div>
           )}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="ml-auto hover:bg-sidebar-accent"
+            className="ml-auto hover:bg-sidebar-accent text-sidebar-foreground/70 hover:text-sidebar-foreground shrink-0"
           >
-            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
         </div>
 
-        <nav className="space-y-2 p-4">
+        {/* Nav */}
+        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              className="flex items-center gap-3 px-3 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-all"
-              activeClassName="bg-sidebar-accent text-primary font-medium shadow-glow-primary"
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/80 transition-all duration-200 group ${
+                isSidebarOpen ? "" : "justify-center"
+              }`}
+              activeClassName="!text-foreground bg-sidebar-accent/90 font-medium"
             >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {isSidebarOpen && <span>{item.label}</span>}
+              {/* Active left bar */}
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-0 rounded-r-full bg-gradient-primary opacity-0 transition-all duration-300 group-[.active]:h-6 group-[.active]:opacity-100" />
+              <item.icon className="h-[18px] w-[18px] flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
+              {isSidebarOpen && <span className="text-sm">{item.label}</span>}
             </NavLink>
           ))}
         </nav>
+
+        {/* Bottom user info when sidebar open */}
+        {isSidebarOpen && user && (
+          <div className="p-3 border-t border-sidebar-border/60 shrink-0">
+            <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-sidebar-accent/60 transition-colors cursor-pointer" onClick={() => navigate("/settings")}>
+              <Avatar className="h-7 w-7 border border-primary/40 shrink-0">
+                <AvatarFallback className="bg-gradient-primary text-white text-xs font-bold">
+                  {user.name?.[0]?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-sidebar-foreground truncate">{user.name || "User"}</p>
+                <p className="text-[10px] text-sidebar-foreground/50 truncate">{user.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </aside>
 
-      {/* Main Content */}
-      <div
-        className={`flex-1 transition-all duration-300 ${
-          isSidebarOpen ? "ml-64" : "ml-20"
-        }`}
-      >
+      {/* ── MAIN AREA ── */}
+      <div className={`flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-20"}`}>
+
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card/80 backdrop-blur-sm px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border/60 bg-background/80 backdrop-blur-md px-6">
           <div className="flex-1 flex items-center gap-4">
-            <form className="relative max-w-md w-full" onSubmit={handleTopSearch}>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <form className="relative max-w-sm w-full" onSubmit={handleTopSearch}>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 value={searchInput}
-                onChange={(event) => {
-                  setSearchDirty(true);
-                  setSearchInput(event.target.value);
-                }}
-                placeholder="Search songs, artists, playlists..."
-                className="pl-10 bg-background/50 border-border"
+                onChange={(e) => { setSearchDirty(true); setSearchInput(e.target.value); }}
+                placeholder="Search songs, artists..."
+                className="pl-9 h-9 bg-muted/40 border-border/50 rounded-full text-sm focus-visible:ring-primary/40"
               />
             </form>
           </div>
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-10 px-2 gap-2 hover:bg-muted">
-                  <Avatar className="h-9 w-9 border-2 border-primary">
-                    <AvatarFallback className="bg-gradient-primary text-white">
+                <Button variant="ghost" className="h-9 px-2 gap-2 hover:bg-muted rounded-full">
+                  <Avatar className="h-7 w-7 border-2 border-primary/60">
+                    <AvatarFallback className="bg-gradient-primary text-white text-xs font-bold">
                       {user.name?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline text-sm text-foreground truncate max-w-[160px]">
+                  <span className="hidden md:inline text-sm text-foreground truncate max-w-[120px]">
                     {user.name || user.email}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.name || "User"}</p>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="space-y-0.5">
+                  <p className="text-sm font-medium">{user.name || "User"}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/")}>
-                  Home
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/social")}>
-                  Social
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/sound-studio")}>
-                  Sound Studio
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/")}>Home</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/social")}>Social</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/sound-studio")}>Sound Studio</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign out
+                  <LogOut className="h-4 w-4 mr-2" />Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -228,7 +239,7 @@ export const Layout = () => {
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button size="sm" className="bg-primary hover:bg-primary/90">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 rounded-full px-5">
                   Sign in
                 </Button>
               </Link>
@@ -236,105 +247,116 @@ export const Layout = () => {
           )}
         </header>
 
-        {/* Page Content */}
-        <main className="p-6 pb-28">
-          <Outlet />
+        {/* Page Content — keyed by location for fade-in on route change */}
+        <main className="p-6 pb-32">
+          <div key={location.pathname} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <Outlet />
+          </div>
         </main>
       </div>
 
+      {/* ── PLAYER BAR ── */}
       {currentTrack && (
         <div
-          className="fixed bottom-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-xl shadow-2xl"
-          style={{ left: isSidebarOpen ? 256 : 80 }}
+          className="fixed bottom-0 right-0 z-50 border-t border-border/60 backdrop-blur-xl shadow-2xl"
+          style={{
+            left: isSidebarOpen ? 256 : 80,
+            background: "linear-gradient(to right, hsl(224 28% 8%), hsl(250 22% 10%), hsl(224 28% 8%))",
+          }}
         >
-          <div className="flex flex-col gap-2 px-6 py-4">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="h-12 w-12 rounded-md overflow-hidden bg-muted shrink-0">
-                  {currentTrack.image_url ? (
-                    <img
-                      src={currentTrack.image_url}
-                      alt={currentTrack.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                      <Music2 className="h-5 w-5" />
+          {/* Accent progress line at very top */}
+          <div className="h-[2px] w-full bg-border/40 relative overflow-hidden">
+            <div
+              className="absolute left-0 top-0 h-full bg-gradient-primary transition-all duration-1000"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+
+          <div className="flex items-center gap-4 px-5 py-3">
+
+            {/* Track info */}
+            <div className="flex items-center gap-3 w-64 min-w-0 shrink-0">
+              <div className={`h-11 w-11 rounded-lg overflow-hidden bg-muted shrink-0 transition-all duration-300 ${isPlaying ? "shadow-glow-primary" : ""}`}>
+                {currentTrack.image_url ? (
+                  <img src={currentTrack.image_url} alt={currentTrack.title} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-gradient-card">
+                    <Music2 className="h-5 w-5 text-primary" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-semibold text-sm text-foreground truncate">{currentTrack.title}</p>
+                  {isPlaying && (
+                    <div className="flex items-end gap-[2px] h-3 shrink-0">
+                      <span className="w-[2px] bg-primary rounded-full h-1.5 animate-wave-1" />
+                      <span className="w-[2px] bg-secondary rounded-full h-2.5 animate-wave-2" />
+                      <span className="w-[2px] bg-primary rounded-full h-3 animate-wave-3" />
                     </div>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-foreground truncate">{currentTrack.title}</p>
-                    {isPlaying && (
-                      <div className="flex items-end gap-[2px] h-4 shrink-0">
-                        <span className="w-[3px] bg-primary rounded-full h-2 animate-wave-1" />
-                        <span className="w-[3px] bg-primary rounded-full h-3 animate-wave-2" />
-                        <span className="w-[3px] bg-primary rounded-full h-4 animate-wave-3" />
-                        <span className="w-[3px] bg-primary rounded-full h-2 animate-wave-4" />
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate">{currentTrack.artist}</p>
-                </div>
+                <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
               </div>
+            </div>
 
-              <div className="flex items-center gap-2 justify-center">
+            {/* Controls — centre */}
+            <div className="flex-1 flex flex-col items-center gap-2 max-w-lg mx-auto">
+              <div className="flex items-center gap-1">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className={isShuffle ? "text-primary" : ""}
+                  className={`h-8 w-8 transition-colors ${isShuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                   onClick={toggleShuffle}
                 >
-                  <Shuffle className="h-4 w-4" />
+                  <Shuffle className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={prev}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={prev}>
                   <SkipBack className="h-4 w-4" />
                 </Button>
                 <Button
                   size="icon"
-                  className="h-10 w-10 bg-primary hover:bg-primary/90 shadow-glow-primary"
+                  className="h-10 w-10 rounded-full bg-gradient-primary hover:opacity-90 shadow-glow-primary transition-transform active:scale-95"
                   onClick={togglePlay}
                 >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4 ml-0.5" />
-                  )}
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
                 </Button>
-                <Button size="icon" variant="ghost" onClick={next}>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={next}>
                   <SkipForward className="h-4 w-4" />
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className={repeatMode !== "off" ? "text-primary" : ""}
+                  className={`h-8 w-8 transition-colors ${repeatMode !== "off" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                   onClick={cycleRepeat}
                 >
-                  <Repeat className="h-4 w-4" />
+                  <Repeat className="h-3.5 w-3.5" />
                 </Button>
               </div>
 
-              <div className="flex items-center gap-2 w-full lg:w-48">
-                <Volume2 className="h-4 w-4 text-muted-foreground" />
+              {/* Seek bar */}
+              <div className="flex items-center gap-2 w-full text-[11px] text-muted-foreground">
+                <span className="tabular-nums w-8 text-right">{formatTime(progress)}</span>
                 <Slider
-                  value={[Math.round(volume * 100)]}
-                  onValueChange={(value) => setVolume((value[0] ?? 0) / 100)}
-                  max={100}
+                  value={[progress]}
+                  max={duration || 1}
                   step={1}
+                  onValueChange={(v) => seek(v[0] ?? 0)}
+                  className="flex-1"
                 />
+                <span className="tabular-nums w-8">{formatTime(duration)}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="tabular-nums">{formatTime(progress)}</span>
+            {/* Volume */}
+            <div className="flex items-center gap-2 w-32 shrink-0 ml-auto">
+              <Volume2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <Slider
-                value={[progress]}
-                max={duration || 1}
+                value={[Math.round(volume * 100)]}
+                onValueChange={(v) => setVolume((v[0] ?? 0) / 100)}
+                max={100}
                 step={1}
-                onValueChange={(value) => seek(value[0] ?? 0)}
               />
-              <span className="tabular-nums">{formatTime(duration)}</span>
             </div>
           </div>
         </div>
