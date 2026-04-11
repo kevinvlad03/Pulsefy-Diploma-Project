@@ -2,12 +2,20 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 const router = Router();
 
 const createPlaylistSchema = z.object({
   name: z.string().min(1).max(120),
   description: z.string().max(500).optional().nullable(),
+  isPublic: z.boolean().optional(),
+});
+
+const updatePlaylistSchema = z.object({
+  name: z.string().min(1).max(120).optional(),
+  description: z.string().max(500).nullable().optional(),
+  isPublic: z.boolean().optional(),
 });
 
 const addTrackSchema = z.object({
@@ -17,40 +25,40 @@ const addTrackSchema = z.object({
 
 async function getOwnedPlaylist(playlistId, userId) {
   const result = await pool.query(
-    "SELECT id, user_id, name, description, created_at FROM playlists WHERE id = $1 AND user_id = $2",
+    "SELECT id, user_id, name, description, is_public, created_at FROM playlists WHERE id = $1 AND user_id = $2",
     [playlistId, userId]
   );
   return result.rows[0] || null;
 }
 
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", requireAuth, asyncHandler(async (req, res) => {
   const result = await pool.query(
-    `SELECT id, user_id, name, description, created_at
+    `SELECT id, user_id, name, description, is_public, created_at
      FROM playlists
      WHERE user_id = $1
      ORDER BY created_at DESC`,
     [req.user.id]
   );
   return res.json({ playlists: result.rows });
-});
+}));
 
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", requireAuth, asyncHandler(async (req, res) => {
   const parse = createPlaylistSchema.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
-  const { name, description } = parse.data;
+  const { name, description, isPublic } = parse.data;
   const result = await pool.query(
-    `INSERT INTO playlists (user_id, name, description)
-     VALUES ($1, $2, $3)
-     RETURNING id, user_id, name, description, created_at`,
-    [req.user.id, name, description || null]
+    `INSERT INTO playlists (user_id, name, description, is_public)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, user_id, name, description, is_public, created_at`,
+    [req.user.id, name, description || null, Boolean(isPublic)]
   );
   return res.status(201).json({ playlist: result.rows[0] });
-});
+}));
 
-router.get("/:id", requireAuth, async (req, res) => {
+router.get("/:id", requireAuth, asyncHandler(async (req, res) => {
   const playlist = await getOwnedPlaylist(req.params.id, req.user.id);
   if (!playlist) {
     return res.status(404).json({ error: "Playlist not found" });
@@ -66,9 +74,54 @@ router.get("/:id", requireAuth, async (req, res) => {
   );
 
   return res.json({ playlist, tracks: tracksResult.rows });
-});
+}));
 
-router.post("/:id/tracks", requireAuth, async (req, res) => {
+router.patch("/:id", requireAuth, asyncHandler(async (req, res) => {
+  const parse = updatePlaylistSchema.safeParse(req.body);
+  if (!parse.success) {
+    return res.status(400).json({ error: "Invalid payload" });
+  }
+
+  const playlist = await getOwnedPlaylist(req.params.id, req.user.id);
+  if (!playlist) {
+    return res.status(404).json({ error: "Playlist not found" });
+  }
+
+  const updates = [];
+  const values = [];
+
+  if (typeof parse.data.name === "string") {
+    values.push(parse.data.name);
+    updates.push(`name = $${values.length}`);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(parse.data, "description")) {
+    values.push(parse.data.description || null);
+    updates.push(`description = $${values.length}`);
+  }
+
+  if (typeof parse.data.isPublic === "boolean") {
+    values.push(parse.data.isPublic);
+    updates.push(`is_public = $${values.length}`);
+  }
+
+  if (!updates.length) {
+    return res.status(400).json({ error: "Nothing to update" });
+  }
+
+  values.push(playlist.id);
+  const result = await pool.query(
+    `UPDATE playlists
+     SET ${updates.join(", ")}
+     WHERE id = $${values.length}
+     RETURNING id, user_id, name, description, is_public, created_at`,
+    values
+  );
+
+  return res.json({ playlist: result.rows[0] });
+}));
+
+router.post("/:id/tracks", requireAuth, asyncHandler(async (req, res) => {
   const parse = addTrackSchema.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: "Invalid payload" });
@@ -102,9 +155,9 @@ router.post("/:id/tracks", requireAuth, async (req, res) => {
   );
 
   return res.status(201).json({ ok: true });
-});
+}));
 
-router.delete("/:id/tracks/:trackId", requireAuth, async (req, res) => {
+router.delete("/:id/tracks/:trackId", requireAuth, asyncHandler(async (req, res) => {
   const playlist = await getOwnedPlaylist(req.params.id, req.user.id);
   if (!playlist) {
     return res.status(404).json({ error: "Playlist not found" });
@@ -115,6 +168,6 @@ router.delete("/:id/tracks/:trackId", requireAuth, async (req, res) => {
     req.params.trackId,
   ]);
   return res.status(204).send();
-});
+}));
 
 export default router;

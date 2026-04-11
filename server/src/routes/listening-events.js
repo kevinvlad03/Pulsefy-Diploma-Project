@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 const router = Router();
 
@@ -56,7 +57,7 @@ async function resolveTrackId(inputTrackId, inputTrack) {
   return created.rows[0].id;
 }
 
-router.post("/", requireAuth, async (req, res) => {
+router.post("/", requireAuth, asyncHandler(async (req, res) => {
   const parse = payloadSchema.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: "Invalid payload" });
@@ -75,6 +76,6 @@ router.post("/", requireAuth, async (req, res) => {
     [req.user.id, resolvedTrackId, playedAt || new Date(), secondsListened]
   );
   return res.status(201).json({ event: result.rows[0] });
-});
+}));
 
 export default router;

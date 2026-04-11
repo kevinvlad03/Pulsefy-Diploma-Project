@@ -3,6 +3,7 @@ import { z } from "zod";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generateWithMusicGen } from "../services/musicgen.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 const router = Router();
 
@@ -12,7 +13,7 @@ const generateSchema = z.object({
   model: z.string().min(3).max(160).optional(),
 });
 
-router.post("/generate", requireAuth, async (req, res) => {
+router.post("/generate", requireAuth, asyncHandler(async (req, res) => {
   const parse = generateSchema.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: "Invalid payload" });
@@ -55,9 +56,9 @@ router.post("/generate", requireAuth, async (req, res) => {
         "Music generation failed. Verify MusicGen setup (Python env, audiocraft install, model download).",
     });
   }
-});
+}));
 
-router.get("/generations", requireAuth, async (req, res) => {
+router.get("/generations", requireAuth, asyncHandler(async (req, res) => {
   const result = await pool.query(
     `SELECT id, user_id, prompt, lyrics, audio_url, status, created_at
      FROM ai_generations
@@ -67,6 +68,6 @@ router.get("/generations", requireAuth, async (req, res) => {
     [req.user.id]
   );
   return res.json({ generations: result.rows });
-});
+}));
 
 export default router;

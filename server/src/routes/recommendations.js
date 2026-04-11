@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 const router = Router();
 
-router.get("/", requireAuth, async (req, res) => {
+router.get("/", requireAuth, asyncHandler(async (req, res) => {
   const result = await pool.query(
     `SELECT r.id, r.reason, r.created_at,
             t.id AS track_id, t.title, t.artist, t.album, t.genre, t.duration_sec, t.audio_url, t.cover_url
@@ -33,9 +34,9 @@ router.get("/", requireAuth, async (req, res) => {
   }));
 
   return res.json({ recommendations });
-});
+}));
 
-router.post("/refresh", requireAuth, async (req, res) => {
+router.post("/refresh", requireAuth, asyncHandler(async (req, res) => {
   const topGenreResult = await pool.query(
     `SELECT t.genre
      FROM listening_events le
@@ -86,6 +87,6 @@ router.post("/refresh", requireAuth, async (req, res) => {
   }
 
   return res.json({ refreshed: true, count: candidateResult.rows.length });
-});
+}));
 
 export default router;

@@ -19,6 +19,7 @@ import {
   Home,
   Sparkles,
   Settings,
+  Users,
   Search,
   Menu,
   X,
@@ -35,6 +36,7 @@ import {
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
+  { to: "/social", label: "Social", icon: Users },
   { to: "/ai-recommendations", label: "AI Recommendations", icon: Sparkles },
   { to: "/ai-generator", label: "Song Generator", icon: Sparkles },
   { to: "/settings", label: "Settings", icon: Settings },
@@ -203,6 +205,9 @@ export const Layout = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/settings")}>
                   Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/social")}>
+                  Social
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/ai-generator")}>
                   AI Song Generator

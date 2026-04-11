@@ -11,6 +11,8 @@ import playlistsRoutes from "./routes/playlists.js";
 import listeningEventsRoutes from "./routes/listening-events.js";
 import recommendationsRoutes from "./routes/recommendations.js";
 import aiRoutes from "./routes/ai.js";
+import socialRoutes from "./routes/social.js";
+import { initializeDatabase } from "./db.js";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -29,6 +31,7 @@ app.use("/playlists", playlistsRoutes);
 app.use("/listening-events", listeningEventsRoutes);
 app.use("/recommendations", recommendationsRoutes);
 app.use("/ai", aiRoutes);
+app.use("/social", socialRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
@@ -36,6 +39,17 @@ app.use((err, req, res, next) => {
 });
 
 const port = process.env.PORT || 4000;
-app.listen(port, () => {
-  console.log(`Pulsefy API listening on port ${port}`);
-});
+
+async function startServer() {
+  try {
+    await initializeDatabase();
+    app.listen(port, () => {
+      console.log(`Pulsefy API listening on port ${port}`);
+    });
+  } catch (err) {
+    console.error("Failed to initialize Pulsefy API", err);
+    process.exit(1);
+  }
+}
+
+void startServer();

@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { pool } from "../db.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 const router = Router();
 
-router.get("/", async (req, res) => {
+router.get("/", asyncHandler(async (req, res) => {
   const { genre, search } = req.query;
   const values = [];
   const where = [];
@@ -27,9 +28,9 @@ router.get("/", async (req, res) => {
     values
   );
   return res.json({ tracks: result.rows });
-});
+}));
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", asyncHandler(async (req, res) => {
   const result = await pool.query(
     "SELECT id, title, artist, album, genre, duration_sec, audio_url, cover_url, created_at FROM tracks WHERE id = $1",
     [req.params.id]
@@ -39,6 +40,6 @@ router.get("/:id", async (req, res) => {
     return res.status(404).json({ error: "Track not found" });
   }
   return res.json({ track });
-});
+}));
 
 export default router;

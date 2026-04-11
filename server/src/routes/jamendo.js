@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db.js";
+import { asyncHandler } from "../utils/async-handler.js";
 
 const router = Router();
 
@@ -51,7 +52,7 @@ async function fetchLocalTracks({ limit, offset, search, genre }) {
   }));
 }
 
-router.get("/tracks", async (req, res) => {
+router.get("/tracks", asyncHandler(async (req, res) => {
   const clientId = process.env.JAMENDO_CLIENT_ID;
 
   const {
@@ -153,6 +154,6 @@ router.get("/tracks", async (req, res) => {
       return res.status(500).json({ error: "Failed to fetch Jamendo tracks" });
     }
   }
-});
+}));
 
 export default router;

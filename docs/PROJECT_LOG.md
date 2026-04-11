@@ -11,6 +11,8 @@ I will only add entries after you approve a step.
   - Continue FE polish pass for cross-page visual consistency.
 
 ## Change Log
+- [Completed] 2026-04-08 — Fixed backend instability caused by async route crashes and unapplied schema drift for new social/profile fields.
+- [Completed] 2026-04-08 — Documented April 8 backend and MusicGen incident details, root cause, and verification notes.
 - [Proposed] 2026-03-10 — Improve AI Generator visual design and add a stronger entry point from Home.
 - [Approved] 2026-03-10 — Improve AI Generator visual design and add a stronger entry point from Home.
 - [Completed] 2026-03-10 — Rebuilt `src/pages/AIGenerator.tsx` with hero/stat cards, prompt studio, prompt suggestions, and redesigned generation history.
@@ -80,6 +82,23 @@ I will only add entries after you approve a step.
 - [Proposed] 2026-02-04 — Hide Jamendo name and present a single library search.
 - [Approved] 2026-02-04 — Hide Jamendo name and present a single library search.
 - [Completed] 2026-02-04 — Dashboard now uses a single library search UI (Jamendo-only backend).
+
+## Incident Notes (2026-04-08)
+### Backend outage
+- Symptom: the API looked down from the app even when `/health` could still briefly return `{"status":"ok"}`.
+- Impact: requests touching newer auth/profile/social/playlist flows could fail and then leave the backend process down.
+- Root cause: newer backend code depended on DB objects not guaranteed to exist yet (`users.bio`, `playlists.is_public`, `follows`), and the Express 4 routes were plain `async` handlers. A thrown DB error could escape route handling and terminate the process.
+- Why it happened: schema updates had been added to `server/db/schema.sql`, but server startup did not automatically apply the idempotent bootstrap/schema files, so local DB state could lag behind code state.
+- Fix: added startup DB initialization from `server/src/db.js` and `server/src/index.js`, and wrapped async route handlers so backend query failures flow into Express error middleware instead of crashing the API.
+- Verification: on 2026-04-08, `/health`, `POST /auth/register`, `GET /social/me`, and `GET /social/discover` all succeeded after the patch and the API stayed up.
+
+### MusicGen failure
+- Symptom shown in UI/API: `Music generation failed. Verify MusicGen setup (Python env, audiocraft install, model download).`
+- Captured failing traceback: `ImportError ... _random.cpython-311-darwin.so ... code signature ... not valid for us`.
+- Immediate cause of that traceback: during that failed run, the Python 3.11 runtime referenced by `server/musicgen/.venv` could not load a native stdlib module, so `torch` failed before MusicGen initialization.
+- Follow-up reproduction on 2026-04-08: once the environment was rechecked, the venv could import `torch`, but direct generator execution also showed a second possible blocker when the model cache is cold: MusicGen attempts to download `facebook/musicgen-small` from Hugging Face.
+- Why it happened: this was an environment/runtime issue, not an application logic bug. MusicGen requires a healthy local Python 3.11 install, working native extension loading, and either network access or an already-populated local model cache.
+- Verification: direct execution of `server/musicgen/generate.py` succeeded, produced `public/media/generated/musicgen-local-smoke.wav`, and a full API smoke test through `POST /ai/generate` returned `status: "completed"` with a generated WAV URL.
 
 ## Session Summary (2026-03-10)
 - Integrated Meta MusicGen (Audiocraft) into the real backend generation pipeline.
