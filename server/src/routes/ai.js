@@ -3,6 +3,7 @@ import { z } from "zod";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { generateWithMusicGen } from "../services/musicgen.js";
+import { generateTTS } from "../services/tts.js";
 import { asyncHandler } from "../utils/async-handler.js";
 
 const router = Router();
@@ -68,6 +69,32 @@ router.get("/generations", requireAuth, asyncHandler(async (req, res) => {
     [req.user.id]
   );
   return res.json({ generations: result.rows });
+}));
+
+// ── TTS ──────────────────────────────────────────────────────────────────────
+
+const ttsSchema = z.object({
+  text: z.string().min(1).max(2000),
+  lang: z.string().min(2).max(10).optional().default("en"),
+  slow: z.boolean().optional().default(false),
+});
+
+router.post("/tts", requireAuth, asyncHandler(async (req, res) => {
+  const parse = ttsSchema.safeParse(req.body);
+  if (!parse.success) {
+    return res.status(400).json({ error: "Invalid payload", details: parse.error.flatten() });
+  }
+
+  const { text, lang, slow } = parse.data;
+
+  try {
+    const result = await generateTTS({ text, lang, slow });
+    return res.status(201).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "TTS generation failed";
+    console.error("[TTS]", message);
+    return res.status(500).json({ error: "TTS generation failed.", detail: message });
+  }
 }));
 
 export default router;
