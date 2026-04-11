@@ -25,6 +25,12 @@ torchmetrics
 torchtext==0.16.0
 torchvision==0.16.0
 
+# TTS support (shares this venv).
+# click must be >= 8.2.1 for typer 0.24.x (spacy dep); gTTS 2.5.4 only uses
+# click for its own CLI, not the Python API, so the version conflict is safe.
+gTTS==2.5.4
+click>=8.2.1
+
 # Note:
 # - `av` and `xformers` are intentionally not installed on this macOS setup.
 # - Compatibility shims are provided in `server/musicgen/av.py` and
