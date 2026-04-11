@@ -49,6 +49,9 @@ const MUSIC_STYLES = [
   { label: "Dark & Dramatic", value: "dark ambient with deep bass pulses and eerie atmospheric layers" },
 ];
 
+// Decorative waveform bar heights for the card art (16 bars)
+const WAVEFORM_HEIGHTS = [30, 55, 70, 45, 85, 60, 40, 75, 50, 90, 35, 65, 80, 45, 60, 35];
+
 const MODEL_OPTIONS = [
   { label: "MusicGen Small (fast)", value: "facebook/musicgen-small" },
   { label: "MusicGen Medium (balanced)", value: "facebook/musicgen-medium" },
@@ -303,7 +306,7 @@ export default function SoundStudio() {
             </div>
           </Card>
 
-          <Card className="p-6 border-border bg-card/90 space-y-3">
+          <Card className="p-6 border-border bg-card/90">
             <div className="flex items-start gap-3">
               <Clock3 className="h-5 w-5 mt-0.5 text-secondary" />
               <div>
@@ -313,15 +316,6 @@ export default function SoundStudio() {
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              className="w-full border-border bg-background/70"
-              onClick={() => generationsQuery.refetch()}
-              disabled={generationsQuery.isFetching}
-            >
-              <RefreshCcw className={cn("h-4 w-4", generationsQuery.isFetching && "animate-spin")} />
-              Refresh History
-            </Button>
           </Card>
         </div>
       </div>
@@ -330,15 +324,35 @@ export default function SoundStudio() {
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-bold">Recent Generations</h2>
-          <Badge variant="outline" className="text-muted-foreground">
-            {(generationsQuery.data || []).length} total
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-muted-foreground">
+              {(generationsQuery.data || []).length} total
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border bg-background/70"
+              onClick={() => generationsQuery.refetch()}
+              disabled={generationsQuery.isFetching}
+            >
+              <RefreshCcw className={cn("h-3.5 w-3.5", generationsQuery.isFetching && "animate-spin")} />
+            </Button>
+          </div>
         </div>
 
         {generationsQuery.isLoading && (
-          <Card className="p-4 border-border bg-card text-sm text-muted-foreground">
-            Loading generations...
-          </Card>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="border-border bg-gradient-card overflow-hidden">
+                <div className="h-40 bg-muted animate-pulse" />
+                <div className="p-4 space-y-2">
+                  <div className="h-3 bg-muted rounded animate-pulse w-1/3" />
+                  <div className="h-4 bg-muted rounded animate-pulse w-4/5" />
+                  <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
 
         {generationsQuery.isError && (
@@ -350,67 +364,116 @@ export default function SoundStudio() {
         {!generationsQuery.isLoading &&
           !generationsQuery.isError &&
           (generationsQuery.data || []).length === 0 && (
-            <Card className="p-8 border-border bg-card text-center">
-              <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Music2 className="h-5 w-5 text-primary" />
+            <Card className="p-10 border-border bg-gradient-card text-center">
+              <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Music2 className="h-7 w-7 text-primary" />
               </div>
-              <p className="font-medium">No tracks generated yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Pick a format above, write a prompt, and create your first track.
+              <p className="font-semibold text-lg">No tracks yet</p>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
+                Pick a format above, write a prompt, and create your first copyright-free track.
               </p>
             </Card>
           )}
 
-        <div className="grid gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {(generationsQuery.data || []).map((generation, index) => {
             const playableTrack = toPlayerTrack(generation, index + 1);
-            const canPlay = Boolean(playableTrack.audio_url) && generation.status === "completed";
-            const isCurrentTrack = currentTrack?.id === playableTrack.id;
+            const canPlay = generation.status === "completed" && Boolean(playableTrack.audio_url);
+            const isActive = currentTrack?.id === playableTrack.id;
+            const shortPrompt = generation.prompt.length > 60
+              ? generation.prompt.slice(0, 60) + "…"
+              : generation.prompt;
+
             return (
-              <Card key={generation.id} className="p-5 border-border bg-gradient-card">
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-3 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className={statusBadgeClass(generation.status)}>
-                        {generation.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{formatDate(generation.created_at)}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Prompt</p>
-                      <p className="text-foreground break-words">{generation.prompt}</p>
-                    </div>
-                    {generation.lyrics && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Lyrics</p>
-                        <p className="text-foreground whitespace-pre-wrap break-words text-sm">
-                          {generation.lyrics}
-                        </p>
-                      </div>
-                    )}
+              <Card
+                key={generation.id}
+                className={cn(
+                  "group border-border bg-gradient-card overflow-hidden transition-all duration-300 animate-in fade-in slide-in-from-bottom-3 duration-500",
+                  canPlay && "hover:scale-[1.02] hover:shadow-glow-primary cursor-pointer",
+                  isActive && "border-primary/50 shadow-glow-primary"
+                )}
+                style={{ animationDelay: `${index * 60}ms` }}
+                onClick={() => canPlay && playTrack(playableTrack, playableTracks)}
+              >
+                {/* Art area */}
+                <div className="relative h-40 bg-gradient-to-br from-primary/20 via-background to-secondary/20 flex items-center justify-center overflow-hidden">
+                  {/* Decorative waveform bars */}
+                  <div className="flex items-end gap-[3px] h-16 px-6 w-full">
+                    {WAVEFORM_HEIGHTS.map((h, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex-1 rounded-full transition-all duration-300",
+                          isActive && isPlaying
+                            ? "bg-primary opacity-90"
+                            : "bg-primary/30 group-hover:bg-primary/50"
+                        )}
+                        style={{
+                          height: `${h}%`,
+                          ...(isActive && isPlaying
+                            ? { animation: `wave-bar ${0.6 + (i % 5) * 0.15}s ease-in-out infinite`, animationDelay: `${i * 40}ms` }
+                            : {}),
+                        }}
+                      />
+                    ))}
                   </div>
 
-                  {canPlay ? (
-                    <Button
-                      className="bg-primary hover:bg-primary/90 md:self-center shrink-0"
-                      onClick={() => playTrack(playableTrack, playableTracks)}
-                    >
-                      {isCurrentTrack && isPlaying ? (
-                        <>
-                          <Pause className="h-4 w-4" />
-                          Pause
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4" />
-                          Play
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Badge variant="outline" className="md:self-center text-muted-foreground shrink-0">
-                      {generation.status === "pending" ? "Generating..." : "No audio"}
+                  {/* Play button overlay */}
+                  {canPlay && (
+                    <div className={cn(
+                      "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                      isActive && isPlaying ? "bg-black/20" : "bg-black/0 group-hover:bg-black/30"
+                    )}>
+                      <div className={cn(
+                        "h-12 w-12 rounded-full flex items-center justify-center shadow-glow-primary transition-all duration-300",
+                        "bg-gradient-primary",
+                        isActive && isPlaying ? "opacity-100 scale-100" : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100"
+                      )}>
+                        {isActive && isPlaying
+                          ? <Pause className="h-5 w-5 text-white" />
+                          : <Play className="h-5 w-5 text-white ml-0.5" />}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status badge top-left */}
+                  <div className="absolute top-2 left-2">
+                    <Badge className={cn("text-[10px] px-2 py-0.5", statusBadgeClass(generation.status))}>
+                      {generation.status === "pending" ? (
+                        <span className="flex items-center gap-1">
+                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          generating
+                        </span>
+                      ) : generation.status}
                     </Badge>
+                  </div>
+
+                  {/* Live wave indicator top-right */}
+                  {isActive && isPlaying && (
+                    <div className="absolute top-2 right-2 flex items-end gap-[2px] h-4">
+                      <span className="w-[3px] bg-primary rounded-full h-2 animate-wave-1" />
+                      <span className="w-[3px] bg-secondary rounded-full h-3 animate-wave-2" />
+                      <span className="w-[3px] bg-primary rounded-full h-4 animate-wave-3" />
+                      <span className="w-[3px] bg-secondary rounded-full h-2 animate-wave-4" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Card body */}
+                <div className="p-4 space-y-1.5">
+                  <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">
+                    {formatDate(generation.created_at)}
+                  </p>
+                  <p className={cn(
+                    "font-semibold text-sm leading-snug line-clamp-2",
+                    isActive ? "text-primary" : "text-foreground"
+                  )}>
+                    {shortPrompt}
+                  </p>
+                  {generation.lyrics && (
+                    <p className="text-xs text-muted-foreground line-clamp-1 italic">
+                      {generation.lyrics.split("\n")[0]}
+                    </p>
                   )}
                 </div>
               </Card>
