@@ -51,7 +51,8 @@ const App = () => {
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
                 <Route path="/player" element={<Navigate to="/" replace />} />
                 <Route path="/ai-recommendations" element={<AIRecommendations />} />
-                <Route path="/ai-generator" element={<AIGenerator />} />
+                <Route path="/sound-studio" element={<AIGenerator />} />
+                <Route path="/ai-generator" element={<Navigate to="/sound-studio" replace />} />
                 <Route path="/social" element={<Social />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/test" element={<TestLab />} />

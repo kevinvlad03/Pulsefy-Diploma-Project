@@ -57,7 +57,22 @@ All colors MUST be HSL.
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Sound Studio gradient */
+    --gradient-studio: linear-gradient(135deg, hsl(260 80% 60%), hsl(320 70% 55%));
+    --glow-studio: 0 0 30px hsla(290, 80%, 60%, 0.4);
   }
+}
+
+@layer utilities {
+  @keyframes wave-bar {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+  .animate-wave-1 { animation: wave-bar 0.9s ease-in-out infinite; }
+  .animate-wave-2 { animation: wave-bar 0.9s ease-in-out infinite 0.15s; }
+  .animate-wave-3 { animation: wave-bar 0.9s ease-in-out infinite 0.3s; }
+  .animate-wave-4 { animation: wave-bar 0.9s ease-in-out infinite 0.45s; }
 }
 
 @layer base {

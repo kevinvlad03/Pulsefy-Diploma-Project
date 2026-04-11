@@ -20,6 +20,7 @@ import {
   Sparkles,
   Settings,
   Users,
+  Mic2,
   Search,
   Menu,
   X,
@@ -36,9 +37,9 @@ import {
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
+  { to: "/ai-recommendations", label: "AI Picks", icon: Sparkles },
+  { to: "/sound-studio", label: "Sound Studio", icon: Mic2 },
   { to: "/social", label: "Social", icon: Users },
-  { to: "/ai-recommendations", label: "AI Recommendations", icon: Sparkles },
-  { to: "/ai-generator", label: "Song Generator", icon: Sparkles },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -209,8 +210,8 @@ export const Layout = () => {
                 <DropdownMenuItem onClick={() => navigate("/social")}>
                   Social
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/ai-generator")}>
-                  AI Song Generator
+                <DropdownMenuItem onClick={() => navigate("/sound-studio")}>
+                  Sound Studio
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
@@ -255,8 +256,18 @@ export const Layout = () => {
                     </div>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-foreground truncate">{currentTrack.title}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground truncate">{currentTrack.title}</p>
+                    {isPlaying && (
+                      <div className="flex items-end gap-[2px] h-4 shrink-0">
+                        <span className="w-[3px] bg-primary rounded-full h-2 animate-wave-1" />
+                        <span className="w-[3px] bg-primary rounded-full h-3 animate-wave-2" />
+                        <span className="w-[3px] bg-primary rounded-full h-4 animate-wave-3" />
+                        <span className="w-[3px] bg-primary rounded-full h-2 animate-wave-4" />
+                      </div>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground truncate">{currentTrack.artist}</p>
                 </div>
               </div>

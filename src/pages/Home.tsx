@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, Heart, Sparkles, Music2, TrendingUp, Wand2, ChevronRight } from "lucide-react";
+import { Play, Pause, Heart, Sparkles, Music2, TrendingUp, Mic2, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { usePlayer, type PlayerTrack } from "@/lib/player";
@@ -121,9 +121,9 @@ export default function Home() {
               AI Picks
             </Button>
           </Link>
-          <Link to="/ai-generator">
+          <Link to="/sound-studio">
             <Button variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
-              Generate a Song
+              Sound Studio
             </Button>
           </Link>
           <Button
@@ -198,16 +198,16 @@ export default function Home() {
         <div className="absolute -left-10 -bottom-14 h-36 w-36 rounded-full bg-secondary/20 blur-2xl" />
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
-            <Badge className="bg-primary/15 text-primary border-primary/40 w-fit">AI Studio</Badge>
-            <h2 className="text-2xl font-bold text-foreground">Generate your own tracks with MusicGen</h2>
+            <Badge className="bg-primary/15 text-primary border-primary/40 w-fit">Sound Studio</Badge>
+            <h2 className="text-2xl font-bold text-foreground">Create copyright-free music for your content</h2>
             <p className="text-muted-foreground max-w-2xl">
-              Open the AI Generator, write a prompt, and play the result directly in the Pulsefy player bar.
+              Generate ad music, background tracks, and original audio — pick a format, describe your sound, done.
             </p>
           </div>
-          <Link to="/ai-generator">
+          <Link to="/sound-studio">
             <Button className="bg-primary hover:bg-primary/90 shadow-glow-primary">
-              <Wand2 className="h-4 w-4" />
-              Open AI Song Generator
+              <Mic2 className="h-4 w-4" />
+              Open Sound Studio
               <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
