@@ -102,7 +102,7 @@ export default function Home() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
           <h1 className="text-4xl font-bold text-foreground">Home</h1>
           <p className="text-muted-foreground mt-2">
@@ -137,41 +137,27 @@ export default function Home() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="p-6 bg-gradient-card border-border">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Music2 className="h-5 w-5 text-primary" />
+        {[
+          { label: "Library", value: `${libraryCount} Tracks`, icon: Music2, color: "primary" as const },
+          { label: "Trending Today", value: `${trendingCount} Picks`, icon: TrendingUp, color: "secondary" as const },
+          { label: "AI Discoveries", value: isAuthenticated ? `${aiDiscoveriesCount} New` : "Sign In", icon: Sparkles, color: "primary" as const },
+        ].map((stat, i) => (
+          <Card
+            key={stat.label}
+            className="p-6 bg-gradient-card border-border hover:border-primary/30 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-500"
+            style={{ animationDelay: `${i * 75}ms` }}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${stat.color === "primary" ? "bg-primary/10" : "bg-secondary/10"}`}>
+                <stat.icon className={`h-5 w-5 ${stat.color === "primary" ? "text-primary" : "text-secondary"}`} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Library</p>
-              <p className="text-2xl font-bold text-foreground">{libraryCount} Tracks</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-6 bg-gradient-card border-border">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-secondary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Trending Today</p>
-              <p className="text-2xl font-bold text-foreground">{trendingCount} Picks</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-6 bg-gradient-card border-border">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">AI Discoveries</p>
-              <p className="text-2xl font-bold text-foreground">
-                {isAuthenticated ? `${aiDiscoveriesCount} New` : "Sign In"}
-              </p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
 
       {!isAuthenticated && (

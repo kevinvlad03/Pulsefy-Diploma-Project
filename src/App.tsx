@@ -9,6 +9,7 @@ import { AUTH_CHANGED_EVENT } from "@/lib/auth";
 import { PlayerProvider } from "@/lib/player";
 import Landing from "./pages/Landing";
 import Home from "./pages/Home";
+import { getToken } from "@/lib/auth";
 import AIRecommendations from "./pages/AIRecommendations";
 import AIGenerator from "./pages/AIGenerator";
 import Social from "./pages/Social";
@@ -45,7 +46,7 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route element={<Layout />}>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={getToken() ? <Home /> : <Navigate to="/about" replace />} />
                 <Route path="/about" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />

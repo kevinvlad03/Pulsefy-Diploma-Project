@@ -65,6 +65,7 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  /* Wave bars for player */
   @keyframes wave-bar {
     0%, 100% { transform: scaleY(0.4); }
     50% { transform: scaleY(1); }
@@ -73,6 +74,50 @@ All colors MUST be HSL.
   .animate-wave-2 { animation: wave-bar 0.9s ease-in-out infinite 0.15s; }
   .animate-wave-3 { animation: wave-bar 0.9s ease-in-out infinite 0.3s; }
   .animate-wave-4 { animation: wave-bar 0.9s ease-in-out infinite 0.45s; }
+
+  /* Floating blobs for hero */
+  @keyframes blob-float {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 10px) scale(0.95); }
+  }
+  .animate-blob { animation: blob-float 8s ease-in-out infinite; }
+  .animate-blob-delay-2 { animation: blob-float 8s ease-in-out infinite 2s; }
+  .animate-blob-delay-4 { animation: blob-float 8s ease-in-out infinite 4s; }
+
+  /* Glow pulse */
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  .animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+
+  /* Typewriter cursor */
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .animate-blink { animation: blink 1s step-end infinite; }
+
+  /* Stagger helpers (used with animate-in) */
+  .delay-75  { animation-delay: 75ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-225 { animation-delay: 225ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-450 { animation-delay: 450ms; }
+  .delay-600 { animation-delay: 600ms; }
+  .delay-750 { animation-delay: 750ms; }
+  .delay-900 { animation-delay: 900ms; }
+
+  /* Gradient text shimmer */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .animate-shimmer {
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
 }
 
 @layer base {

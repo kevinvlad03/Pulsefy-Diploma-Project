@@ -221,11 +221,18 @@ export const Layout = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link to="/auth">
-              <Button size="sm" className="bg-primary hover:bg-primary/90">
-                Sign in
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link to="/about">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hidden sm:inline-flex">
+                  About
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button size="sm" className="bg-primary hover:bg-primary/90">
+                  Sign in
+                </Button>
+              </Link>
+            </div>
           )}
         </header>
 
