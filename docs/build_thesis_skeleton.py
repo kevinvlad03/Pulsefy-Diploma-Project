@@ -970,7 +970,88 @@ page_break(doc)
 # GLOSSARY
 # ======================================================================
 add_heading_styled(doc, "Glossary", level=1)
-add_todo(doc, "two-column term/definition table with 35-45 abbreviation expansions")
+add_para(doc,
+    "The terms below are abbreviations and technical concepts referenced in "
+    "this paper. Proper nouns (such as MusicGen, Jamendo, Pollinations.ai) "
+    "are not listed here.",
+    space_after=12,
+)
+
+glossary_terms = [
+    ("API", "Application Programming Interface"),
+    ("BPM", "Beats Per Minute"),
+    ("CC", "Creative Commons (license family used by the Jamendo catalog)"),
+    ("CDN", "Content Delivery Network"),
+    ("CLI", "Command Line Interface"),
+    ("CPU", "Central Processing Unit"),
+    ("CRUD", "Create, Read, Update, Delete"),
+    ("CSS", "Cascading Style Sheets"),
+    ("CSV", "Comma-Separated Values"),
+    ("DAW", "Digital Audio Workstation"),
+    ("ERD", "Entity-Relationship Diagram"),
+    ("FK", "Foreign Key"),
+    ("GB", "Gigabyte"),
+    ("GPU", "Graphics Processing Unit"),
+    ("HTML", "HyperText Markup Language"),
+    ("HTTP", "HyperText Transfer Protocol"),
+    ("HTTPS", "HyperText Transfer Protocol Secure"),
+    ("IDE", "Integrated Development Environment"),
+    ("JS", "JavaScript"),
+    ("JSON", "JavaScript Object Notation"),
+    ("JWT", "JSON Web Token"),
+    ("LLM", "Large Language Model"),
+    ("MAU", "Monthly Active Users"),
+    ("MB", "Megabyte"),
+    ("MIR", "Music Information Retrieval"),
+    ("ML", "Machine Learning"),
+    ("M:N", "Many-to-Many (relational cardinality)"),
+    ("MoSCoW", "Must, Should, Could, Won't (requirement priority scale)"),
+    ("MP3", "MPEG Audio Layer III"),
+    ("MVC", "Model-View-Controller"),
+    ("NLP", "Natural Language Processing"),
+    ("npm", "Node Package Manager"),
+    ("OOP", "Object-Oriented Programming"),
+    ("ORM", "Object-Relational Mapping"),
+    ("OS", "Operating System"),
+    ("PCM", "Pulse Code Modulation"),
+    ("PDF", "Portable Document Format"),
+    ("PK", "Primary Key"),
+    ("PNG", "Portable Network Graphics"),
+    ("REST", "Representational State Transfer"),
+    ("SDK", "Software Development Kit"),
+    ("SPA", "Single-Page Application"),
+    ("SQL", "Structured Query Language"),
+    ("TS", "TypeScript"),
+    ("TTS", "Text-to-Speech"),
+    ("UC", "Use Case"),
+    ("UI", "User Interface"),
+    ("UML", "Unified Modeling Language"),
+    ("URL", "Uniform Resource Locator"),
+    ("UX", "User Experience"),
+    ("venv", "Virtual Environment (Python)"),
+    ("WAV", "Waveform Audio File Format"),
+    ("XML", "eXtensible Markup Language"),
+]
+
+glossary_table = doc.add_table(rows=len(glossary_terms), cols=2)
+glossary_table.autofit = False
+for i, (term, definition) in enumerate(glossary_terms):
+    cell_term = glossary_table.rows[i].cells[0]
+    cell_term.text = term
+    for p in cell_term.paragraphs:
+        for r in p.runs:
+            r.bold = True
+            r.font.size = Pt(11)
+    cell_def = glossary_table.rows[i].cells[1]
+    cell_def.text = definition
+    for p in cell_def.paragraphs:
+        for r in p.runs:
+            r.font.size = Pt(11)
+
+# narrow first column, wide second
+for row in glossary_table.rows:
+    row.cells[0].width = Cm(3.5)
+    row.cells[1].width = Cm(13)
 
 
 # ======================================================================
