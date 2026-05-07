@@ -1,171 +1,134 @@
-# Chapter 1 — Figure specifications
+# Chapter 1 — Figure specifications (ad-creation framing, 2026-05-07)
 
-Two diagrams to draw for Chapter 1 of the diploma thesis. Both should match IARCA's monochrome style: black outlines, white fills, light gray only for shared elements, no shadows, no color, no gradients. Caption format: `Figure N: <Caption>` placed under the figure, centered, plain Times New Roman 10pt.
+Two diagrams to draw for Chapter 1. Both are in Mermaid (paste into https://mermaid.live, export as PNG, insert into Word). Captions below each go centred under the figure in plain Times New Roman 10 pt.
+
+The framing was pivoted on 2026-05-07 from music streaming to ad creation. Both figures had to be re-spec'd from scratch — the previous "Listening flow ↔ Creation flow" diagram does not apply.
 
 ---
 
-## Figure 1 — Listening and creation flows in Pulsefy
+## Figure 1 — Pulsefy ad creation pipeline overview
 
 ### Purpose
 
-This is the **load-bearing diagram of Chapter 1**. The chapter's argument is "listening and creating used to be separate products; Pulsefy combines them". This figure has to make that visually obvious in one glance.
+This is the load-bearing diagram of Chapter 1. The chapter argues that existing ad-creation tools fragment the production pipeline across four separate applications, and that Pulsefy unifies them. The figure has to make this visually obvious in one glance: *one product brief enters, four parallel asset generators run, the assets converge into one finished ad*.
 
-### Tool
+### Mermaid code
 
-draw.io (https://app.diagrams.net). Use the default UML / flowchart shapes.
+```mermaid
+flowchart TD
+    BRIEF["Product brief<br/>(name, description,<br/>target platform)"]
 
-### Layout (text drawing, not to scale)
+    subgraph ASSETS [AI asset generation]
+        direction LR
+        IMG["Scene images<br/>(Pollinations.ai)"]
+        MUS["Background music<br/>(MusicGen / Pulsefy AI)"]
+        VOX["Voiceover<br/>(gTTS)"]
+        CAT["Licensed track<br/>(Jamendo catalog)"]
+    end
 
-```
-        LISTENING                     CREATION
-        =========                     ========
-           |                              |
-           v                              v
-   +---------------+              +---------------+
-   | Browse catalog|              |  Type prompt  |
-   +---------------+              +---------------+
-           |          <------>           |
-           v                              v
-   +---------------+              +---------------+
-   |  Play track   |              | Generate AI   |
-   |               |              |    track      |
-   +---------------+              +---------------+
-           |          <------>           |
-           v                              v
-   +---------------+              +---------------+
-   |      Get      |              |  Add cover    |
-   | recommendation|              |     art       |
-   +---------------+              +---------------+
-           |          <------>           |
-           v                              v
-   +---------------+              +---------------+
-   |   Save to     |              |  Publish to   |
-   |   playlist    |              |   library     |
-   +---------------+              +---------------+
-            \                            /
-             \                          /
-              v                        v
-    +-------------------------------------------+
-    |     Shared library, single account        |  (light gray fill)
-    +-------------------------------------------+
+    ASSEMBLE["Video assembly<br/>(FFmpeg overlay)"]
+    EXPORT["Export in target ratio<br/>(9:16, 1:1, 16:9)"]
+    PUBLISH["Ready for TikTok,<br/>Reels, or Shorts"]
+
+    BRIEF --> IMG
+    BRIEF --> MUS
+    BRIEF --> VOX
+    BRIEF --> CAT
+    IMG --> ASSEMBLE
+    MUS --> ASSEMBLE
+    VOX --> ASSEMBLE
+    CAT --> ASSEMBLE
+    ASSEMBLE --> EXPORT
+    EXPORT --> PUBLISH
+
+    classDef plain fill:#ffffff,stroke:#000000,stroke-width:1px,color:#000000
+    classDef shared fill:#e8e8e8,stroke:#000000,stroke-width:1.5px,color:#000000
+    class BRIEF,IMG,MUS,VOX,CAT,ASSEMBLE,EXPORT plain
+    class PUBLISH shared
 ```
 
-### Detailed shape inventory
+### Why this shape
 
-- **2 column-header labels**: "LISTENING" (left), "CREATION" (right). Text only, bold, no bounding box. Placed at the top of each column.
-- **8 process boxes** (rounded rectangles, default draw.io style): four per column, arranged vertically.
-- **Left column boxes (top to bottom)**: `Browse catalog` → `Play track` → `Get recommendation` → `Save to playlist`.
-- **Right column boxes (top to bottom)**: `Type prompt` → `Generate AI track` → `Add cover art` → `Publish to library`.
-- **8 vertical arrows**: one connecting each pair of adjacent boxes within a column. Standard down-arrows.
-- **3 horizontal double-headed arrows**: one between each parallel pair of boxes (rows 2, 3, 4). These arrows are the figure's argument — they show the user can transition between the two activities at any step. Label them with short verbs in italic above the arrow line, e.g. "inspires", "mixes into", "remixes".
-- **1 shared bottom block**: a wide rounded rectangle spanning both columns, labeled `Shared library, single account`. Fill it with light gray (e.g. `#F0F0F0`) so it's visually distinct from the white process boxes. Two diagonal arrows connect the bottom box of each column down to this shared block.
+- **One node at the top (`Product brief`)** — Pulsefy's single entry point. The product description plus target platform configures every downstream step.
+- **Four parallel asset boxes (Image / Music / Voiceover / Licensed track)** — these are Pulsefy's four generation subsystems plus the licensed-music alternative. They run in parallel, not sequentially. *Music* and *Licensed track* are mutually exclusive in practice (the user picks one) but both feed the same assembly stage, which is why both are shown.
+- **Two convergence nodes (`Video assembly` then `Export`)** — the assembly fuses the chosen audio onto the visuals; the export step picks the social-platform aspect ratio.
+- **Gray output box (`Ready for TikTok, Reels, or Shorts`)** — visually distinct so the reader sees the publish-ready endpoint.
 
-### Sizing
-
-Roughly 12 cm wide × 14 cm tall on the page. Don't worry about exact pixels — draw.io's auto-export will scale. Make sure all box labels fit on one or two lines.
+The diagram's argument: a competitor needs four separate apps to produce the same output; Pulsefy collapses those into one branched pipeline.
 
 ### Caption (exact text)
 
-`Figure 1: Listening and creation flows in Pulsefy`
-
-### Save and place
-
-- Export as PNG at 300 DPI from draw.io (`File → Export As → PNG`, set DPI = 300, transparent background).
-- File name: `figure_01_pulsefy_flows.png` in `docs/figures/` (create the folder).
-- In Word: replace the placeholder `[FIGURE 1: Listening and creation flows in Pulsefy — to be drawn]` with the inserted image. Keep the existing centered caption beneath.
+`Figure 1: Pulsefy ad creation pipeline overview`
 
 ---
 
-## Figure 2 — Manual versus AI-assisted music discovery and creation timelines
+## Figure 2 — Manual versus AI-assisted ad creation timelines
 
 ### Purpose
 
-Justifies the time-cost claim made in Chapter 1.3 ("the time between an idea and its evaluation drops"). Must be **honest** — no exaggerated factor like "1000× faster". The visual argument is hours-vs-minutes, not "AI is magic".
+Justifies the time-and-cost claim made in 1.3 and 1.4. The visual argument is: a creator using fragmented tooling spends hours per ad; the same creator using Pulsefy spends minutes. This must be **honest** — no exaggerated factor like "1000× faster". Hours-vs-minutes is the real claim.
 
-### Tool
+### Mermaid code
 
-draw.io or Canva. Both work — pick whichever is faster for you. If using Canva, search for "horizontal timeline infographic" templates.
+```mermaid
+flowchart TD
+    subgraph manual [MANUAL WORKFLOW — total ~8 hours across 4 separate tools]
+        direction LR
+        M1["0–2h<br/>Design product visuals<br/>in Canva or Figma"]
+        M2["2–4h<br/>Generate or license<br/>music in Suno or<br/>stock-music site"]
+        M3["4–5h<br/>Record voiceover<br/>or generate in<br/>ElevenLabs"]
+        M4["5–8h<br/>Edit and assemble<br/>final ad in CapCut<br/>or Premiere"]
+        M1 --> M2 --> M3 --> M4
+    end
 
-### Layout
+    subgraph ai [AI-ASSISTED WORKFLOW — Pulsefy, total ~10 minutes in one app]
+        direction LR
+        A1["0–3min<br/>Enter product brief"]
+        A2["3–5min<br/>Generate scene<br/>images and pick<br/>variants"]
+        A3["5–7min<br/>Generate music<br/>or pick from catalog;<br/>generate voiceover"]
+        A4["7–10min<br/>Preview, assemble,<br/>and export"]
+        A1 --> A2 --> A3 --> A4
+    end
 
-Two horizontal timelines stacked vertically. Each timeline has tick marks for time intervals and rounded rectangles above the line for the activity at each interval.
-
+    classDef plain fill:#ffffff,stroke:#000000,stroke-width:1px,color:#000000
+    class M1,M2,M3,M4,A1,A2,A3,A4 plain
 ```
-MANUAL WORKFLOW
-|------|------|--------------------------------|
-0h     2h     3h                              8h
-[Browse: Spotify, blogs,    [Find vocalist  [Record / mix / iterate]
- friends' playlists for      or DAW + sample
- inspiration]                pack]
 
+### Why this shape
 
-AI-ASSISTED WORKFLOW (PULSEFY)
-|----------|--|--|----------|
-0min       5  6  7         10min
-[Open       [Type  [Generate  [Iterate prompt,
- recs]      prompt] AI track]  regenerate]
-```
-
-### Detailed spec
-
-**Top timeline — "MANUAL WORKFLOW"**:
-- Total span: 0 to 8 hours.
-- Tick marks at: 0h, 2h, 3h, 8h.
-- Activity blocks above the line:
-  - 0h-2h: `Browse Spotify, blogs, friends' playlists for inspiration`
-  - 2h-3h: `Find a vocalist or a DAW with sample pack`
-  - 3h-8h: `Record / mix / iterate`
-- Label "MANUAL WORKFLOW" left of timeline.
-
-**Bottom timeline — "AI-ASSISTED WORKFLOW (PULSEFY)"**:
-- Total span: 0 to 10 minutes.
-- Tick marks at: 0min, 5min, 6min, 7min, 10min.
-- Activity blocks above the line:
-  - 0-5min: `Open recommendations feed`
-  - 5-6min: `Type prompt based on a recommendation`
-  - 6-7min: `Generate AI track`
-  - 7-10min: `Iterate prompt, regenerate`
-- Label "AI-ASSISTED WORKFLOW (PULSEFY)" left of timeline.
-
-### Critical instruction: do NOT normalize the scales
-
-The two timelines must visually represent different absolute durations (hours vs minutes). Don't make them the same physical length on the page — that misleads. The manual timeline should be roughly the same physical length as the AI timeline despite being 48× longer in real time, which makes the *honest* point that AI compresses the workflow. Add the unit label (h vs min) clearly on each.
-
-### Style
-
-Monochrome. Black timeline rule, black tick marks, white-filled rounded rectangles for activity blocks, plain text labels. No icons, no emoji, no color.
+- **Two stacked horizontal subgraphs**, each labelled with its total duration in the subgraph title (`~8 hours` vs `~10 minutes`).
+- **Four blocks per subgraph** so the visual real estate is roughly the same on the page despite the 48× duration difference. The reader is comparing *activities*, not pixel-widths, while the time labels keep the actual scale honest.
+- **Time range baked into each block label** so durations are visible without distorting the layout. This avoids Mermaid's Gantt-chart problem where the AI workflow would render as a tiny invisible bar next to the manual one.
+- **Manual workflow names four specific competitor tools** (Canva, Suno, ElevenLabs, CapCut) — this anchors the fragmentation argument in named products the reader recognises.
+- **AI workflow names no tool other than Pulsefy** because the whole pipeline lives inside one app.
 
 ### Caption (exact text)
 
-`Figure 2: Manual versus AI-assisted music discovery and creation timelines`
-
-### Save and place
-
-- Export as PNG at 300 DPI.
-- File name: `figure_02_workflow_timelines.png` in `docs/figures/`.
-- Replace the placeholder in Word and keep the existing caption.
+`Figure 2: Manual versus AI-assisted ad creation timelines`
 
 ---
 
-## After both figures are inserted
+## How to render and export
 
-1. In Word, replace the two `[FIGURE N: ... — to be drawn]` placeholder lines with the actual image (Insert → Pictures → From File).
-2. The existing `Figure N: <caption>` line beneath each placeholder is already centered with correct caption styling — keep it.
-3. Right-click the Table of Figures at the front of the document and choose "Update Field" to refresh it.
-4. Save and push.
+1. Go to https://mermaid.live
+2. Paste the code from either figure into the editor.
+3. Click **Actions → PNG (download)** for a transparent-background PNG.
+4. In Word, replace the `[FIGURE N: ... — to be drawn]` placeholder with the inserted image (Insert → Pictures → From File).
+5. Keep the existing `Figure N: <caption>` line beneath the inserted image — the caption styling is already correct.
+6. After both figures are in, right-click the Table of Figures at the front of the document and choose **Update Field** to refresh it.
 
 ---
 
 ## Why these figures matter for the defense
 
-A commissioner is likely to ask one of two questions about Chapter 1:
+Likely commissioner questions about Chapter 1 and how each figure answers them:
 
-> "Why couldn't a user just open Spotify in one tab and Suno in another?"
+> *"Why couldn't a user just open Canva, Suno, ElevenLabs, and CapCut in four tabs? They're all free."*
 
-Figure 1 answers this visually — the horizontal arrows show that the *workflow itself* is interleaved, not just the data. Tab-switching is friction.
+Figure 1 answers this. The four-prong asset stage shows that each of those tools owns one column. The convergence point shows Pulsefy's contribution: a single assembly pipeline that ties all four asset types together with consistent format handling and a single account.
 
-> "How much faster is your AI workflow really?"
+> *"How much faster is your AI workflow really? Hours-to-minutes is a strong claim."*
 
-Figure 2 answers this honestly. Hours-to-minutes is a real claim. Minutes-to-microseconds would be a lie. Don't overpromise in the diagram.
+Figure 2 answers this honestly. ~8 hours of fragmented work versus ~10 minutes inside one app. The block contents make the comparison concrete: same four stages, different absolute cost. No invented multipliers.
 
-Be ready to walk through both figures verbally during the defense.
+Both figures are simple enough to walk through verbally during the defense. Practice naming the four tools listed in the manual workflow — the commissioner may ask which tool corresponds to which Pulsefy subsystem, and the right answer is *Canva → Pollinations imagegen, Suno → MusicGen, ElevenLabs → gTTS, CapCut → FFmpeg overlay*.

@@ -26,3 +26,8 @@ dist-ssr
 .venv/
 server/musicgen/.venv/
 server/musicgen/.venv_py312_backup/
+
+# Word lock files (created when a .docx is open in Word)
+~$*.docx
+~$*.doc
+
