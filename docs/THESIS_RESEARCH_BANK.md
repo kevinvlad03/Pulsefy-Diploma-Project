@@ -12,33 +12,30 @@
 
 The new Ch 1 talks about TikTok, Instagram Reels, and YouTube Shorts as the dominant ad surface, plus the cost gap that small advertisers face. Most of this section is **`[TODO: research]`** because the original 2026-05-05 session was scoped to music streaming.
 
-### A.1 Short-form social video platforms — `[TODO: research]`
+### A.1 Short-form social video platforms
 
-| # | Topic | Suggested source | Where to use |
-|---|---|---|---|
-| A1.1 | TikTok monthly active users (global) | TikTok newsroom or ByteDance investor disclosures; cross-check with Statista or Insider Intelligence | Ch 1.1 paragraph 1 (footnote F1) |
-| A1.2 | TikTok ad revenue (2025) | Insider Intelligence / eMarketer ad revenue forecast; or ByteDance Q4 2025 if disclosed | Ch 1.1 paragraph 2 (footnote F2) |
-| A1.3 | Instagram Reels engagement | Meta Q4 2025 or Q1 2026 earnings call transcript; Meta For Business blog | Ch 1.1 paragraph 1 |
-| A1.4 | YouTube Shorts daily views | YouTube Official Blog or Google Q1 2026 earnings call | Ch 1.1 paragraph 1 |
-| A1.5 | Vertical video format adoption | eMarketer or HubSpot State of Marketing report | Ch 1.1 |
+| # | Topic | Source | URL | Verified | Key fact | Where to use |
+|---|---|---|---|---|---|---|
+| A1.1 | **TikTok monthly active users (global, 2025)** | Statista citing eMarketer | https://www.statista.com/statistics/1327116/number-of-global-tiktok-users/ | 2026-05-07 | ~955.3M MAU projected for 2025 (eMarketer). 900.7M actual for 2024. ByteDance last officially confirmed 1B MAU in September 2021. | Ch 1.1 paragraph 1 (anchor for footnote **F1**) |
+| A1.2 | Instagram Reels engagement | `[TODO: research]` Meta Q1 2026 earnings call transcript or Meta For Business blog | n/a | n/a | Find a recent Reels-specific engagement figure | Ch 1.1 paragraph 1 supporting context |
+| A1.3 | YouTube Shorts daily views | `[TODO: research]` YouTube Official Blog or Google Q1 2026 earnings call | n/a | n/a | Find a recent Shorts-specific stat | Ch 1.1 paragraph 1 supporting context |
 
-### A.2 Digital advertising market — `[TODO: research]`
+### A.2 Digital advertising market
 
-| # | Topic | Suggested source | Where to use |
-|---|---|---|---|
-| A2.1 | Global digital ad spend (2025) | eMarketer global ad spending forecast; WARC Global Ad Trends | Ch 1.1 paragraph 2 |
-| A2.2 | Social media ad spend share | eMarketer / Statista ad spend by channel | Ch 1.1 paragraph 2 |
-| A2.3 | Short-form video ad spend growth rate | eMarketer / Insider Intelligence | Ch 1.1 paragraph 2 |
-| A2.4 | Creator economy market size | Goldman Sachs Creator Economy report 2024–2025 | Ch 1.2 (who creates ads now) |
+| # | Topic | Source | URL | Verified | Key fact | Where to use |
+|---|---|---|---|---|---|---|
+| A2.1 | **Global ad spend 2025 + social-media share** | EMARKETER citing WARC | https://www.emarketer.com/content/global-ad-spending-now-estimated-rise-7-4--warc-s-first-positive-revision-over-year | 2026-05-07 | Total: $1.17T (+7.4% YoY); social: $306.4B (26.2% share, +14.9% growth); WARC forecast September 25, 2025; 8.1% growth projected for 2026 reaching $1.27T | Ch 1.1 paragraph 2 (anchor for footnote **F2**) |
+| A2.2 | TikTok ad spend growth | EMARKETER (above) | (same URL) | 2026-05-07 | TikTok ad spend grew ~57% YoY in the WARC update; Instagram +18.8%. The 57% TikTok figure is stronger than the social-aggregate figure for short-form-specific claims. | Ch 1.1 paragraph 2 (also useful for Ch 2.2.2 CapCut framing) |
+| A2.3 | Creator economy market size | `[TODO: research]` Goldman Sachs Creator Economy report 2024–2025 | n/a | n/a | Find a creator-economy total market size figure | Ch 1.2 (who creates ads now) |
 
-### A.3 Ad creation cost benchmarks — `[TODO: research]`
+### A.3 Ad creation cost benchmarks
 
-| # | Topic | Suggested source | Where to use |
-|---|---|---|---|
-| A3.1 | Small-agency campaign pricing (EU / Romania) | Clutch.co or Sortlist.com filtered to small EU studios | Ch 1.3 paragraph 1 (footnote F3) |
-| A3.2 | Adobe Creative Cloud monthly subscription price (EU) | Adobe official pricing page (https://www.adobe.com/creativecloud/plans.html) | Ch 1.3 paragraph 2 (footnote F4) |
-| A3.3 | Final Cut Pro / DaVinci Resolve pricing | Apple App Store (Final Cut Pro) and Blackmagic Design page (DaVinci) | Ch 1.3 paragraph 2 |
-| A3.4 | Time-to-produce-an-ad benchmarks | HubSpot State of Video Marketing or Wyzowl Video Marketing Statistics | Ch 1.3 paragraph 4 |
+| # | Topic | Source | URL | Verified | Key fact | Where to use |
+|---|---|---|---|---|---|---|
+| A3.1 | **Romanian advertising agency pricing** | Sortlist directory | https://www.sortlist.com/advertising/romania-ro | 2026-05-07 (via search summary; direct fetch returned 403) | Romanian agencies most commonly bill at $25–$49/hour (Sortlist filter data). Influencer marketing campaigns start from ~€2,000. **The original Ch 1.3 prose claim of "€1k–€10k per campaign" was softened on 2026-05-07** to "in the thousands of euros" because no authoritative single source publishes that specific range. | Ch 1.3 paragraph 1 (anchor for footnote **F3**) |
+| A3.2 | **Adobe Creative Cloud Pro (successor to All Apps) pricing** | Adobe Creative Cloud Pro page | https://www.adobe.com/creativecloud/pro.html | 2026-05-07 (via search summary; direct fetch timed out) | Creative Cloud Pro plan introduced August 2025 replacing the previous All Apps tier. **Individual price: $69.99/month (USD).** Romania-specific RON pricing is dynamic on adobe.com/ro/creativecloud/plans.html and must be fetched directly the day before submission. | Ch 1.3 paragraph 2 (anchor for footnote **F4**) |
+| A3.3 | Final Cut Pro / DaVinci Resolve pricing | `[TODO: research]` Apple App Store (Final Cut Pro) and Blackmagic Design page (DaVinci) | n/a | n/a | Add specific one-time / subscription prices | Ch 1.3 paragraph 2 supporting |
+| A3.4 | Time-to-produce-an-ad benchmarks | `[TODO: research]` HubSpot State of Video Marketing or Wyzowl Video Marketing Statistics | n/a | n/a | Quantify the manual-workflow time claim in Figure 2 | Ch 1.3 paragraph 4 + Figure 2 |
 
 ### A.4 Music context (carried forward from 2026-05-05, lower priority for Ch 1)
 

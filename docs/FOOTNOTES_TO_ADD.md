@@ -20,12 +20,12 @@ The footnote IDs (F1, F2, ...) are stable across this file and the .docx so you 
 
 ## Footnote table
 
-| ID | Chapter / paragraph | What the body claim is | Suggested footnote text |
+| ID | Chapter / paragraph | Verified source | Citation skeleton (paste into Word footnote) |
 |---|---|---|---|
-| F1 | 1.1 paragraph 1 | TikTok / Meta short-form audiences in the hundreds of millions | TikTok and Meta active user figures from the most recent quarterly investor reports. Cross-reference Statista or eMarketer summary. *Verify and replace with the specific report URL and access date — see `docs/THESIS_RESEARCH_BANK.md` Section A.* |
-| F2 | 1.1 paragraph 2 | Global digital advertising spend, social-platform share, short-form growth | eMarketer or WARC global ad-spend report for 2025–2026. *Verify with a fresh fetch and add the URL and access date.* |
-| F3 | 1.3 paragraph 1 | Agency cost €1k–€10k per campaign | Cite a Romanian or European small-agency rate card. Examples to verify: clutch.co / sortlist.com filtered to small studios in EU. *Pick one source, fetch the URL, add to References.* |
-| F4 | 1.3 paragraph 2 | Adobe Creative Cloud ~€60/month | Adobe's official pricing page (https://www.adobe.com/creativecloud/plans.html) or its EU equivalent. *Add URL with access date and current monthly price.* |
+| F1 | 1.1 paragraph 1 | eMarketer figure for TikTok 2025 MAU (~955M) via Statista; ByteDance officially announced 1B MAU September 2021. URL fetched 2026-05-07. | Statista. (2025). *Number of monthly active TikTok users worldwide from 2018 to 2025*. Statista. Retrieved May 7, 2026, from https://www.statista.com/statistics/1327116/number-of-global-tiktok-users/ |
+| F2 | 1.1 paragraph 2 | WARC global ad spend forecast September 2025: $1.17T (+7.4% YoY), social = 26.2% share at $306.4B (+14.9%). URL fetched 2026-05-07. | Williams, R. (2025, September 25). *Global ad spending now estimated to rise 7.4%, WARC's first positive revision in over a year*. EMARKETER. Retrieved May 7, 2026, from https://www.emarketer.com/content/global-ad-spending-now-estimated-rise-7-4--warc-s-first-positive-revision-over-year |
+| F3 | 1.3 paragraph 1 | **Note:** the original "€1k–€10k" range was softened on 2026-05-07 to "in the thousands of euros" because no single authoritative source publishes that exact range. Suggested supporting source is Sortlist Romania directory; agency hourly rates appear in the $25–$49 band per Sortlist filters. | Sortlist. (2026). *The 10 best advertising agencies in Romania*. Sortlist. Retrieved May 7, 2026, from https://www.sortlist.com/advertising/romania-ro |
+| F4 | 1.3 paragraph 2 | Adobe Creative Cloud Pro plan (successor to All Apps, introduced August 2025): $69.99/month for individual users. Romania-specific RON pricing requires a direct fetch of adobe.com/ro/creativecloud/plans.html the day before submission. | Adobe. (2026). *Creative Cloud Pro*. Adobe. Retrieved May 7, 2026, from https://www.adobe.com/creativecloud/pro.html |
 
 ## Footnotes already covered by the research bank
 
