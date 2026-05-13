@@ -1,0 +1,18 @@
+{
+  "midi_dir": "/Users/dumitruvlad/Documents/Facultate/Licenta/Pulsefy/server/musicgen/lstm/data/midi",
+  "max_files": null,
+  "min_notes": 20,
+  "seq_len": 128,
+  "val_split": 0.05,
+  "embed_dim": 64,
+  "hidden_dim": 256,
+  "num_layers": 2,
+  "dropout": 0.3,
+  "epochs": 30,
+  "batch_size": 64,
+  "lr": 0.001,
+  "grad_clip": 1.0,
+  "device": "auto",
+  "output_dir": "/Users/dumitruvlad/Documents/Facultate/Licenta/Pulsefy/server/musicgen/lstm/checkpoints",
+  "seed": 42
+}

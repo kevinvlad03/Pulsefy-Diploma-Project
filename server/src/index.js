@@ -12,6 +12,7 @@ import listeningEventsRoutes from "./routes/listening-events.js";
 import recommendationsRoutes from "./routes/recommendations.js";
 import aiRoutes from "./routes/ai.js";
 import socialRoutes from "./routes/social.js";
+import trackLikesRoutes from "./routes/track-likes.js";
 import { initializeDatabase } from "./db.js";
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/listening-events", listeningEventsRoutes);
 app.use("/recommendations", recommendationsRoutes);
 app.use("/ai", aiRoutes);
 app.use("/social", socialRoutes);
+app.use("/track-likes", trackLikesRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -26,7 +26,11 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
       res.status === 401 && (data?.error === "Invalid auth token" || data?.error === "Missing auth token")
         ? "Your session expired. Sign in again."
         : data?.error || "Request failed";
-    throw new Error(message);
+    const err = Object.assign(new Error(message), {
+      status: res.status,
+      code: data?.code as string | undefined,
+    });
+    throw err;
   }
   return data;
 }

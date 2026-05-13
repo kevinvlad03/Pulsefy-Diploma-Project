@@ -31,3 +31,4 @@ server/musicgen/.venv_py312_backup/
 ~$*.docx
 ~$*.doc
 
+.claude/worktrees/

@@ -1,0 +1,4 @@
+# Pulsefy Free Music Generator dependencies
+# Lightweight — no ML model download required
+numpy>=1.24
+scipy>=1.10

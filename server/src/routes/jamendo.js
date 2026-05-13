@@ -125,6 +125,7 @@ router.get("/tracks", asyncHandler(async (req, res) => {
       title: track.name,
       artist: track.artist_name,
       album: track.album_name,
+      genre: track.musicinfo?.tags?.genres?.[0] || null,
       duration_sec: track.duration,
       audio_url: track.audio,
       image_url: track.image,

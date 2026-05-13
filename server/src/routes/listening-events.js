@@ -57,6 +57,23 @@ async function resolveTrackId(inputTrackId, inputTrack) {
   return created.rows[0].id;
 }
 
+router.get("/recent", requireAuth, asyncHandler(async (req, res) => {
+  const limit = Math.min(10, Math.max(1, Number(req.query.limit) || 4));
+  const result = await pool.query(
+    `SELECT t.id, t.title, t.artist, t.album, t.genre,
+            t.duration_sec, t.audio_url, t.cover_url AS image_url,
+            MAX(le.played_at) AS last_played
+     FROM listening_events le
+     JOIN tracks t ON t.id = le.track_id
+     WHERE le.user_id = $1
+     GROUP BY t.id, t.title, t.artist, t.album, t.genre, t.duration_sec, t.audio_url, t.cover_url
+     ORDER BY last_played DESC
+     LIMIT $2`,
+    [req.user.id, limit]
+  );
+  return res.json({ tracks: result.rows });
+}));
+
 router.post("/", requireAuth, asyncHandler(async (req, res) => {
   const parse = payloadSchema.safeParse(req.body);
   if (!parse.success) {

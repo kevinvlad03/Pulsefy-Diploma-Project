@@ -1,0 +1,11 @@
+{
+  "format_version": 1,
+  "PAD": 0,
+  "START": 1,
+  "END": 2,
+  "REST": 3,
+  "NOTE_OFFSET": 4,
+  "DURATION_OFFSET": 131,
+  "MAX_DURATION": 32,
+  "VOCAB_SIZE": 164
+}

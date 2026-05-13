@@ -3,6 +3,7 @@ type StoredUser = {
   email: string;
   name: string;
   bio?: string | null;
+  subscription_tier?: 'free' | 'premium';
 };
 
 const TOKEN_KEY = "pulsefy_token";

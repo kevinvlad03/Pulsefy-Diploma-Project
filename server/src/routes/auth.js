@@ -35,7 +35,7 @@ router.post("/register", asyncHandler(async (req, res) => {
 
   try {
     const result = await pool.query(
-      "INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3) RETURNING id, email, name, bio, created_at",
+      "INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3) RETURNING id, email, name, bio, subscription_tier, created_at",
       [email, name, passwordHash]
     );
     const user = result.rows[0];
@@ -57,7 +57,7 @@ router.post("/login", asyncHandler(async (req, res) => {
 
   const { email, password } = parse.data;
   const result = await pool.query(
-    "SELECT id, email, name, bio, password_hash, created_at FROM users WHERE email = $1",
+    "SELECT id, email, name, bio, subscription_tier, password_hash, created_at FROM users WHERE email = $1",
     [email]
   );
   const user = result.rows[0];
@@ -72,14 +72,14 @@ router.post("/login", asyncHandler(async (req, res) => {
 
   const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
   return res.json({
-    user: { id: user.id, email: user.email, name: user.name, bio: user.bio, created_at: user.created_at },
+    user: { id: user.id, email: user.email, name: user.name, bio: user.bio, subscription_tier: user.subscription_tier, created_at: user.created_at },
     token,
   });
 }));
 
 router.get("/me", requireAuth, asyncHandler(async (req, res) => {
   const result = await pool.query(
-    "SELECT id, email, name, bio, created_at FROM users WHERE id = $1",
+    "SELECT id, email, name, bio, subscription_tier, created_at FROM users WHERE id = $1",
     [req.user.id]
   );
   const user = result.rows[0];
@@ -87,6 +87,15 @@ router.get("/me", requireAuth, asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "User not found" });
   }
   return res.json({ user });
+}));
+
+router.post("/upgrade", requireAuth, asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    `UPDATE users SET subscription_tier = 'premium' WHERE id = $1
+     RETURNING id, email, name, bio, subscription_tier, created_at`,
+    [req.user.id]
+  );
+  return res.json({ user: result.rows[0] });
 }));
 
 router.patch("/me", requireAuth, asyncHandler(async (req, res) => {

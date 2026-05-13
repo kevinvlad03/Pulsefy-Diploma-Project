@@ -10,6 +10,7 @@ const projectRoot = path.resolve(__dirname, "../../..");
 
 const defaultGeneratedDir = path.join(projectRoot, "public", "media", "generated");
 const defaultScriptPath = path.join(projectRoot, "server", "musicgen", "generate.py");
+const defaultFreeScriptPath = path.join(projectRoot, "server", "musicgen", "generate_free.py");
 
 function toInt(value, fallback) {
   const parsed = Number.parseInt(String(value), 10);
@@ -67,6 +68,43 @@ function runPythonProcess({ pythonCmd, scriptPath, prompt, outputPath, model, du
       reject(error);
     });
   });
+}
+
+export async function generateWithMusicGenFree({ prompt, durationSec }) {
+  const pythonCmd = process.env.MUSICGEN_FREE_PYTHON || process.env.MUSICGEN_PYTHON || "python3";
+  const scriptPath = process.env.MUSICGEN_FREE_SCRIPT_PATH || defaultFreeScriptPath;
+  const generatedDir = process.env.MUSICGEN_OUTPUT_DIR || defaultGeneratedDir;
+  const defaultDuration = 8;
+  const finalDuration = clamp(toInt(durationSec, defaultDuration), 1, 30);
+
+  await fs.mkdir(generatedDir, { recursive: true });
+  const filename = `${Date.now()}-${crypto.randomUUID()}.wav`;
+  const outputPath = path.join(generatedDir, filename);
+
+  const { stdout } = await runPythonProcess({
+    pythonCmd,
+    scriptPath,
+    prompt: prompt || "upbeat",
+    outputPath,
+    model: "pulsefy-free-v0",
+    durationSec: finalDuration,
+    device: "cpu",
+  });
+
+  // Parse the JSON the Python script prints to stdout to get the actual model name.
+  // generate_free.py routes to lstm/generate.py when a checkpoint exists, so the
+  // model field will be "pulsefy-lstm-v1" once trained, otherwise "pulsefy-free-v0".
+  let modelName = "pulsefy-free-v0";
+  try {
+    const parsed = JSON.parse(stdout.trim());
+    if (parsed.model) modelName = parsed.model;
+  } catch { /* stdout not JSON — keep default */ }
+
+  return {
+    audioUrl: `/media/generated/${filename}`,
+    model: modelName,
+    durationSec: finalDuration,
+  };
 }
 
 export async function generateWithMusicGen({ prompt, durationSec, model }) {

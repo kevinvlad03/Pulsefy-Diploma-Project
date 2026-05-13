@@ -80,7 +80,7 @@ export async function generateAdImages({
     imageUrls.push(publicUrl);
 
     // Delay between requests — Pollinations rate-limits rapid bursts
-    if (i < count - 1) await sleep(3000);
+    if (i < count - 1) await sleep(6000);
   }
 
   return { imagePaths, imageUrls };
@@ -114,7 +114,10 @@ async function downloadImage(url, destPath, retries = 3) {
       });
 
       if (res.status === 429) {
-        const wait = attempt * 5000;
+        if (attempt === retries) {
+          throw new Error(`Pollinations.ai rate limited after ${retries} attempts — try again in a minute`);
+        }
+        const wait = attempt * 10_000; // 10s, 20s, 30s
         console.warn(`[imagegen] rate limited, retrying in ${wait / 1000}s (attempt ${attempt}/${retries})`);
         await sleep(wait);
         continue;

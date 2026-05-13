@@ -128,5 +128,11 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Sora', system-ui, sans-serif;
   }
+}
+
+/* Player bar: ignore sidebar offset on small screens */
+@media (max-width: 767px) {
+  .player-bar { left: 0 !important; }
 }

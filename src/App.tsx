@@ -51,7 +51,8 @@ const App = () => {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
                 <Route path="/player" element={<Navigate to="/" replace />} />
-                <Route path="/ai-recommendations" element={<AIRecommendations />} />
+                <Route path="/for-you" element={<AIRecommendations />} />
+                <Route path="/ai-recommendations" element={<Navigate to="/for-you" replace />} />
                 <Route path="/sound-studio" element={<AIGenerator />} />
                 <Route path="/ai-generator" element={<Navigate to="/sound-studio" replace />} />
                 <Route path="/social" element={<Social />} />
