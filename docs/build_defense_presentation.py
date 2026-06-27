@@ -1,15 +1,15 @@
 """
-Build the Pulsefy diploma defense presentation.
+Pulsefy diploma defense presentation — dark mode, 12 slides, ~5 minutes.
 
-12 slides, 5 minutes total speaking time, calm and minimal.
-Designed for ~25 seconds per slide with the spoken text in the notes pane.
+More descriptive text per slide than the first version, restrained academic
+tone (no selling language), darker palette for sun-lit rooms.
 
 Run from the worktree root:
     python3 docs/build_defense_presentation.py
 """
 
 from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
+from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
@@ -20,40 +20,42 @@ OUT = (
     "Pulsefy_Defense_Presentation.pptx"
 )
 
-# Pulsefy accent palette
-VIOLET = RGBColor(0x7C, 0x3A, 0xED)
-INK = RGBColor(0x0F, 0x17, 0x2A)
-MUTED = RGBColor(0x64, 0x74, 0x8B)
-SOFT = RGBColor(0xE9, 0xD5, 0xFF)
-WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+# Dark-mode palette
+BG = RGBColor(0x0F, 0x17, 0x2A)        # slate-900 background
+CARD = RGBColor(0x1E, 0x29, 0x3B)      # slate-800 card surface
+INK = RGBColor(0xF8, 0xFA, 0xFC)       # slate-50 primary text
+MUTED = RGBColor(0x94, 0xA3, 0xB8)     # slate-400 muted text
+VIOLET = RGBColor(0xA7, 0x8B, 0xFA)    # violet-400 accent
+ORANGE = RGBColor(0xFB, 0x92, 0x3C)    # orange-400 secondary accent (premium)
+GREEN = RGBColor(0x4A, 0xDE, 0x80)     # green-400 (free tier accent)
+BORDER = RGBColor(0x33, 0x41, 0x55)    # slate-700 subtle borders
 
-# 16:9 presentation
 prs = Presentation()
 prs.slide_width = Inches(13.333)
 prs.slide_height = Inches(7.5)
 
-BLANK = prs.slide_layouts[6]  # fully blank layout
+BLANK = prs.slide_layouts[6]
 
 
 def add_slide():
     slide = prs.slides.add_slide(BLANK)
+    bg = slide.background.fill
+    bg.solid()
+    bg.fore_color.rgb = BG
     return slide
 
 
-def add_text(slide, x, y, w, h, text, *, size=24, bold=False, color=INK,
-             align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, italic=False,
-             font_name="Calibri"):
+def text(slide, x, y, w, h, content, *, size=18, bold=False, color=INK,
+         align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP, italic=False,
+         font_name="Calibri"):
     tb = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = tb.text_frame
     tf.word_wrap = True
     tf.vertical_anchor = anchor
-    if not text:
-        return tb
-    # first paragraph
     p = tf.paragraphs[0]
     p.alignment = align
     run = p.add_run()
-    run.text = text
+    run.text = content
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
@@ -62,14 +64,13 @@ def add_text(slide, x, y, w, h, text, *, size=24, bold=False, color=INK,
     return tb
 
 
-def add_paragraph_run(textbox, text, *, size=18, bold=False, color=INK,
-                      align=PP_ALIGN.LEFT, italic=False, font_name="Calibri"):
-    """Add an additional paragraph to an existing textbox."""
-    tf = textbox.text_frame
+def addp(tb, content, *, size=16, bold=False, color=INK,
+         align=PP_ALIGN.LEFT, italic=False, font_name="Calibri"):
+    tf = tb.text_frame
     p = tf.add_paragraph()
     p.alignment = align
     run = p.add_run()
-    run.text = text
+    run.text = content
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
@@ -78,156 +79,237 @@ def add_paragraph_run(textbox, text, *, size=18, bold=False, color=INK,
     return p
 
 
-def add_accent_bar(slide, x, y, w, h, color=VIOLET):
-    shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
-                                   Inches(x), Inches(y), Inches(w), Inches(h))
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = color
-    shape.line.fill.background()
-    return shape
+def accent_bar(slide, x, y, w, h, color=VIOLET):
+    shp = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
+                                 Inches(x), Inches(y), Inches(w), Inches(h))
+    shp.fill.solid()
+    shp.fill.fore_color.rgb = color
+    shp.line.fill.background()
+    return shp
 
 
-def set_speaker_notes(slide, text):
-    notes_tf = slide.notes_slide.notes_text_frame
-    notes_tf.text = text
+def card(slide, x, y, w, h, fill=CARD, border=BORDER, border_w=1.0):
+    shp = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                                 Inches(x), Inches(y), Inches(w), Inches(h))
+    shp.fill.solid()
+    shp.fill.fore_color.rgb = fill
+    shp.line.color.rgb = border
+    shp.line.width = Pt(border_w)
+    return shp
 
 
-def add_image_placeholder(slide, x, y, w, h, caption):
-    """Soft grey rectangle with placeholder text — Vlad replaces with screenshot."""
-    shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
-                                   Inches(x), Inches(y), Inches(w), Inches(h))
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = RGBColor(0xF1, 0xF5, 0xF9)
-    shape.line.color.rgb = RGBColor(0xCB, 0xD5, 0xE1)
-    shape.line.width = Pt(1)
-    tf = shape.text_frame
+def image_placeholder(slide, x, y, w, h, caption):
+    shp = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
+                                 Inches(x), Inches(y), Inches(w), Inches(h))
+    shp.fill.solid()
+    shp.fill.fore_color.rgb = CARD
+    shp.line.color.rgb = BORDER
+    shp.line.width = Pt(1)
+    tf = shp.text_frame
     tf.word_wrap = True
     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     run = p.add_run()
     run.text = caption
-    run.font.size = Pt(14)
+    run.font.size = Pt(13)
     run.font.italic = True
     run.font.color.rgb = MUTED
+
+
+def slide_header(slide, title_text):
+    accent_bar(slide, 1.0, 0.95, 0.08, 0.45, VIOLET)
+    text(slide, 1.25, 0.85, 11.5, 0.65, title_text,
+         size=28, bold=True, color=INK)
+
+
+def notes(slide, content):
+    slide.notes_slide.notes_text_frame.text = content
 
 
 # ====================================================================
 # SLIDE 1 — Title
 # ====================================================================
 s = add_slide()
-add_accent_bar(s, 0, 3.4, 13.333, 0.04)
-add_text(s, 1.0, 2.4, 11.3, 1.0, "Pulsefy",
-         size=72, bold=True, color=INK, align=PP_ALIGN.LEFT)
-add_text(s, 1.0, 3.6, 11.3, 0.7,
-         "AI-Assisted Ad Creation Platform for Short-Form Social Video",
-         size=22, color=MUTED, align=PP_ALIGN.LEFT)
+accent_bar(s, 0, 3.4, 13.333, 0.04, VIOLET)
+text(s, 1.0, 2.3, 11.3, 1.1, "Pulsefy",
+     size=80, bold=True, color=INK)
+text(s, 1.0, 3.6, 11.3, 0.7,
+     "AI-Assisted Ad Creation Platform for Short-Form Social Video",
+     size=22, color=MUTED)
 
-add_text(s, 1.0, 5.6, 5.5, 0.4, "Vlad DUMITRU", size=16, bold=True, color=INK)
-add_text(s, 1.0, 6.0, 5.5, 0.4, "Diploma project, June 2026", size=13, color=MUTED)
+text(s, 1.0, 5.6, 5.5, 0.4, "Vlad DUMITRU", size=15, bold=True, color=INK)
+text(s, 1.0, 6.0, 5.5, 0.4, "Diploma project, June 2026",
+     size=12, color=MUTED)
 
-add_text(s, 7.8, 5.6, 4.6, 0.4, "Coordinator", size=12, color=MUTED, align=PP_ALIGN.RIGHT)
-add_text(s, 7.8, 5.9, 4.6, 0.4, "Conf. dr. ing. Iuliana MARIN",
-         size=14, bold=True, color=INK, align=PP_ALIGN.RIGHT)
-add_text(s, 7.8, 6.3, 4.6, 0.4,
-         "Faculty of Engineering in Foreign Languages, UPB",
-         size=11, color=MUTED, align=PP_ALIGN.RIGHT)
+text(s, 7.8, 5.6, 4.6, 0.4, "Coordinator",
+     size=11, color=MUTED, align=PP_ALIGN.RIGHT)
+text(s, 7.8, 5.9, 4.6, 0.4, "Conf. dr. ing. Iuliana MARIN",
+     size=14, bold=True, color=INK, align=PP_ALIGN.RIGHT)
+text(s, 7.8, 6.3, 4.6, 0.4,
+     "Faculty of Engineering in Foreign Languages, UPB",
+     size=10, color=MUTED, align=PP_ALIGN.RIGHT)
 
-set_speaker_notes(s,
-    "Good morning. I'm Vlad Dumitru, and I'm presenting Pulsefy, "
-    "an AI-assisted ad creation platform built as my diploma project "
-    "under the guidance of Conf. dr. ing. Iuliana Marin."
+notes(s,
+    "Good morning. I'm Vlad Dumitru, presenting my diploma project, "
+    "Pulsefy — an AI-assisted ad creation platform built under the "
+    "guidance of Conf. dr. ing. Iuliana Marin at the Faculty of "
+    "Engineering in Foreign Languages."
 )
 
 
 # ====================================================================
-# SLIDE 2 — The problem
+# SLIDE 2 — Context
 # ====================================================================
 s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "Short-form social ads are expensive to produce",
-         size=32, bold=True, color=INK)
+slide_header(s, "Context: short-form social video advertising")
 
-add_text(s, 1.0, 2.4, 11.5, 0.5,
-         "Three options, none of them good for solo creators:",
-         size=18, color=MUTED, italic=True)
+text(s, 1.0, 1.9, 11.3, 1.6,
+     "TikTok, Instagram Reels, and YouTube Shorts have become the dominant "
+     "surface for product advertising. The format demands frequent posting, "
+     "vertical video, and audio-first content. The production cost gap "
+     "between professional agency work and what an individual creator can "
+     "produce alone has widened.",
+     size=15, color=INK)
 
-tb = add_text(s, 1.0, 3.2, 11.5, 0.6,
-              "Hire an agency",
-              size=24, bold=True, color=VIOLET)
-add_paragraph_run(tb, "    ~1,000–10,000 € per campaign",
-                  size=18, color=INK)
+card(s, 1.0, 3.7, 11.3, 3.2)
+text(s, 1.4, 3.9, 10.5, 0.5,
+     "Three options currently available to a small advertiser",
+     size=16, bold=True, color=VIOLET)
 
-tb2 = add_text(s, 1.0, 4.3, 11.5, 0.6,
-               "Stitch together four DIY tools",
-               size=24, bold=True, color=VIOLET)
-add_paragraph_run(tb2, "    Canva + Suno + ElevenLabs + CapCut, four subscriptions, four interfaces",
-                  size=18, color=INK)
+text(s, 1.4, 4.6, 3.4, 0.4, "Hire an agency",
+     size=15, bold=True, color=INK)
+text(s, 1.4, 5.05, 3.4, 1.6,
+     "Roughly one to ten thousand euros per campaign. Out of reach for "
+     "recurring use.",
+     size=12, color=MUTED)
 
-tb3 = add_text(s, 1.0, 5.4, 11.5, 0.6,
-               "Skip advertising altogether",
-               size=24, bold=True, color=VIOLET)
-add_paragraph_run(tb3, "    Lose visibility on platforms that reward consistent posting",
-                  size=18, color=INK)
+text(s, 5.0, 4.6, 3.4, 0.4, "Stitch four DIY tools",
+     size=15, bold=True, color=INK)
+text(s, 5.0, 5.05, 3.4, 1.6,
+     "Canva, Suno, ElevenLabs, CapCut. Four subscriptions, four "
+     "interfaces, hours of friction per ad.",
+     size=12, color=MUTED)
 
-set_speaker_notes(s,
-    "Small businesses and solo creators need to advertise on TikTok, "
-    "Reels, and Shorts at high frequency. The options are agency work, "
-    "which costs thousands per campaign, stitching together four separate "
-    "tools, which costs hours per ad, or skipping advertising entirely "
-    "and losing visibility. There is a clear gap for a single, "
-    "low-cost, fast tool."
+text(s, 8.6, 4.6, 3.4, 0.4, "Skip advertising",
+     size=15, bold=True, color=INK)
+text(s, 8.6, 5.05, 3.4, 1.6,
+     "Lose reach on platforms whose algorithms reward consistent "
+     "posting cadence.",
+     size=12, color=MUTED)
+
+notes(s,
+    "Short-form social video is now the dominant advertising surface for "
+    "small businesses and creators. The current options are narrow: hire "
+    "an agency at thousands of euros per campaign, stitch together four "
+    "separate creative tools at the cost of hours per ad, or skip "
+    "advertising and lose visibility. This is the gap Pulsefy targets."
 )
 
 
 # ====================================================================
-# SLIDE 3 — Pulsefy in one line
+# SLIDE 3 — What Pulsefy is
 # ====================================================================
 s = add_slide()
-add_text(s, 0.5, 2.6, 12.3, 1.5,
-         "One application.",
-         size=54, bold=True, color=INK, align=PP_ALIGN.CENTER)
-add_text(s, 0.5, 3.6, 12.3, 1.5,
-         "Four AI subsystems.",
-         size=54, bold=True, color=VIOLET, align=PP_ALIGN.CENTER)
-add_text(s, 0.5, 4.6, 12.3, 1.5,
-         "One finished ad.",
-         size=54, bold=True, color=INK, align=PP_ALIGN.CENTER)
+slide_header(s, "What Pulsefy is")
 
-add_text(s, 0.5, 6.4, 12.3, 0.5,
-         "Image generation, music generation, voiceover synthesis, video assembly.",
-         size=16, color=MUTED, align=PP_ALIGN.CENTER, italic=True)
+text(s, 1.0, 2.0, 11.3, 2.8,
+     "Pulsefy is a web application that unifies four AI generation "
+     "subsystems behind a single user account: scene image generation, "
+     "background music generation, voiceover synthesis, and video "
+     "assembly. The user enters a short product brief and receives a "
+     "finished MP4 ready for upload to TikTok, Instagram Reels, or "
+     "YouTube Shorts.",
+     size=18, color=INK)
 
-set_speaker_notes(s,
-    "Pulsefy bundles the four asset-creation stages behind a single account: "
-    "scene image generation, background music generation, voiceover synthesis, "
-    "and video assembly. The user enters a product brief and gets back "
-    "a finished MP4 ready to upload to TikTok or Reels."
+card(s, 1.0, 4.9, 11.3, 1.9)
+text(s, 1.4, 5.1, 10.5, 0.5, "Scope of the platform",
+     size=14, bold=True, color=VIOLET)
+text(s, 1.4, 5.6, 10.5, 1.1,
+     "A free tier with functional coverage across all four subsystems, "
+     "a premium tier that substitutes higher-quality engines for the "
+     "same workflows, and a social layer (Jamendo catalog browser and "
+     "creator leaderboard) that connects users to one another and to "
+     "Creative Commons music sources.",
+     size=13, color=INK)
+
+notes(s,
+    "Pulsefy unifies the four generation steps that normally live in "
+    "separate apps into a single web application. The user enters a "
+    "brief, the system produces a finished MP4 in the requested aspect "
+    "ratio, and the same account covers both free and premium "
+    "workflows plus a thin social layer with the Jamendo catalog "
+    "and a creator leaderboard."
 )
 
 
 # ====================================================================
-# SLIDE 4 — The four AI subsystems (pipeline visual)
+# SLIDE 4 — Core features
 # ====================================================================
 s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "Four AI subsystems behind one interface",
-         size=30, bold=True, color=INK)
+slide_header(s, "Core features")
 
-# Pipeline: Product brief → 4 generators → FFmpeg → MP4
-def box(x, y, w, h, label, sub, fill=SOFT):
-    shape = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-                               Inches(x), Inches(y), Inches(w), Inches(h))
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = fill
-    shape.line.color.rgb = VIOLET
-    shape.line.width = Pt(1.25)
-    tf = shape.text_frame
+def feature_card(x, y, w, h, title, body):
+    card(s, x, y, w, h)
+    text(s, x + 0.25, y + 0.15, w - 0.5, 0.4, title,
+         size=13, bold=True, color=VIOLET)
+    text(s, x + 0.25, y + 0.6, w - 0.5, h - 0.7, body,
+         size=11, color=INK)
+
+# Two columns × three rows
+feature_card(1.0, 1.85, 5.5, 1.45,
+    "AI scene image generation",
+    "Pollinations.ai integration with four named ad shot types and "
+    "three social aspect ratios (9:16, 1:1, 16:9).")
+feature_card(6.8, 1.85, 5.5, 1.45,
+    "Two music engines",
+    "Pulsefy AI custom LSTM for instant free-tier output, MusicGen "
+    "for higher-quality premium output.")
+
+feature_card(1.0, 3.45, 5.5, 1.45,
+    "Multilingual voiceover",
+    "gTTS-based voiceover synthesis. English on the free tier, "
+    "dozens of languages on premium.")
+feature_card(6.8, 3.45, 5.5, 1.45,
+    "Video assembly and upload",
+    "FFmpeg-based assembly with Ken Burns effect, plus a separate "
+    "upload path that overlays generated audio onto user video.")
+
+feature_card(1.0, 5.05, 5.5, 1.45,
+    "Licensed music catalog",
+    "Jamendo Creative Commons proxy with search, genre filtering, "
+    "inline preview, and direct attachment.")
+feature_card(6.8, 5.05, 5.5, 1.45,
+    "Creator leaderboard",
+    "Public ranking by generation count, surfacing active creators "
+    "without requiring an explicit follow graph.")
+
+notes(s,
+    "Six core features. The four AI subsystems on the left side of "
+    "the slide handle generation. The two on the right cover catalog "
+    "browsing and the social-layer leaderboard. Together they cover "
+    "the full lifecycle of a short-form ad from brief to publish-ready "
+    "asset, with no need to leave the application."
+)
+
+
+# ====================================================================
+# SLIDE 5 — Generation pipeline
+# ====================================================================
+s = add_slide()
+slide_header(s, "Generation pipeline")
+
+def pbox(x, y, w, h, label, sub, fill=CARD):
+    shp = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                             Inches(x), Inches(y), Inches(w), Inches(h))
+    shp.fill.solid()
+    shp.fill.fore_color.rgb = fill
+    shp.line.color.rgb = VIOLET
+    shp.line.width = Pt(1.25)
+    tf = shp.text_frame
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
     tf.margin_left = Inches(0.1)
     tf.margin_right = Inches(0.1)
-    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     r = p.add_run()
@@ -240,307 +322,297 @@ def box(x, y, w, h, label, sub, fill=SOFT):
     r2 = p2.add_run()
     r2.text = sub
     r2.font.size = Pt(10)
-    r2.font.color.rgb = MUTED
     r2.font.italic = True
+    r2.font.color.rgb = MUTED
 
-# Product brief
-box(0.6, 3.0, 2.0, 1.5, "Product brief", "name, style, ratio",
-    fill=RGBColor(0xF1, 0xF5, 0xF9))
+pbox(0.6, 3.2, 2.0, 1.5, "Product brief", "name, style, ratio")
+pbox(3.4, 1.7, 3.3, 1.1, "Scene images", "Pollinations.ai")
+pbox(3.4, 3.0, 3.3, 1.1, "Music", "MusicGen / Pulsefy AI")
+pbox(3.4, 4.3, 3.3, 1.1, "Voiceover", "gTTS")
+pbox(3.4, 5.6, 3.3, 1.1, "Assembly", "FFmpeg + Ken Burns")
+pbox(8.0, 3.2, 2.0, 1.5, "MP4 ad", "9:16 / 1:1 / 16:9")
+pbox(10.8, 3.2, 2.0, 1.5, "Publish", "TikTok / Reels / Shorts",
+     fill=RGBColor(0x16, 0x2F, 0x1F))
 
-# 4 AI subsystems (stacked vertically in the middle)
-box(3.4, 1.7, 3.2, 1.1, "Scene images", "Pollinations.ai")
-box(3.4, 3.0, 3.2, 1.1, "Music", "MusicGen / Pulsefy AI")
-box(3.4, 4.3, 3.2, 1.1, "Voiceover", "gTTS")
-box(3.4, 5.6, 3.2, 1.1, "Assembly", "FFmpeg")
+text(s, 1.0, 6.95, 11.3, 0.45,
+     "Single request from the brief, four parallel asset stages, "
+     "assembly into a single MP4 at the chosen social-platform ratio.",
+     size=11, color=MUTED, italic=True, align=PP_ALIGN.CENTER)
 
-# Output
-box(8.0, 3.0, 2.0, 1.5, "MP4 ad", "9:16 / 1:1 / 16:9",
-    fill=RGBColor(0xDC, 0xFC, 0xE7))
-
-# Publish destination
-box(10.8, 3.0, 2.0, 1.5, "TikTok • Reels • Shorts", "ready to upload",
-    fill=RGBColor(0xF1, 0xF5, 0xF9))
-
-set_speaker_notes(s,
-    "Each stage is backed by a dedicated AI subsystem. Pollinations.ai "
-    "produces the scene images. MusicGen or a custom LSTM I trained "
-    "handles the background music. gTTS synthesizes the voiceover. "
-    "FFmpeg assembles everything into the final MP4 at the requested "
-    "aspect ratio."
+notes(s,
+    "The pipeline takes a single product brief, fans out into four "
+    "parallel generation stages, and converges on FFmpeg assembly. "
+    "The result is a single MP4 in the user's chosen aspect ratio, "
+    "ready for upload to the target social platform."
 )
 
 
 # ====================================================================
-# SLIDE 5 — My main contribution: Pulsefy AI
+# SLIDE 6 — Original contribution: Pulsefy AI
 # ====================================================================
 s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "My main contribution: Pulsefy AI",
-         size=32, bold=True, color=INK)
+slide_header(s, "Original contribution: Pulsefy AI")
 
-add_text(s, 1.0, 1.9, 11.5, 0.5,
-         "A custom LSTM music generator trained from scratch",
-         size=20, color=VIOLET, italic=True)
+text(s, 1.0, 1.85, 7.0, 0.5,
+     "A custom LSTM music generator trained from scratch",
+     size=16, color=VIOLET, italic=True)
 
-add_text(s, 1.0, 3.0, 5.8, 0.6,
-         "Why it matters",
-         size=20, bold=True, color=INK)
-tb = add_text(s, 1.0, 3.7, 5.8, 0.4,
-              "The free tier never depends on a paid third-party model.",
-              size=14, color=INK)
-add_paragraph_run(tb, "")
-add_paragraph_run(tb,
-    "Required learning PyTorch, MIDI tokenisation, and sequence "
-    "modelling end-to-end.",
-    size=14, color=INK)
-add_paragraph_run(tb, "")
-add_paragraph_run(tb,
-    "Generates a track in single-digit seconds — instant feedback "
-    "for the creator.",
+text(s, 1.0, 2.7, 7.0, 4.0,
+     "Pulsefy AI is the original technical contribution of the project. "
+     "It is a token-level next-event LSTM model that generates "
+     "background music for the free tier of the platform without "
+     "depending on any third-party service.",
+     size=14, color=INK)
+
+addp(s.shapes[-1], "")
+addp(s.shapes[-1],
+    "Building this rather than relying solely on Meta's MusicGen "
+    "required end-to-end implementation of three components: a MIDI "
+    "preprocessing and tokenisation pipeline, a PyTorch training loop "
+    "with Apple Metal acceleration, and an inference path integrated "
+    "with the Node.js backend through a Python subprocess.",
     size=14, color=INK)
 
-add_image_placeholder(s, 7.5, 2.9, 5.0, 3.6,
-    "[Insert: training screenshot from Ch 5 / Figure 43]")
+addp(s.shapes[-1], "")
+addp(s.shapes[-1],
+    "Inference completes in single-digit seconds on consumer "
+    "hardware, which makes the free tier feel instant.",
+    size=14, color=INK, italic=True)
 
-set_speaker_notes(s,
-    "The part of the project I'm most proud of is Pulsefy AI, a custom "
-    "LSTM music generator I trained from scratch on a curated MIDI corpus. "
-    "Building this rather than just plugging in an off-the-shelf model "
-    "means the free tier of the platform never depends on a paid third-party "
-    "service, and it required me to learn PyTorch, MIDI tokenisation, and "
-    "sequence modelling end to end."
+image_placeholder(s, 8.4, 2.5, 4.5, 4.3,
+    "[Insert: training screenshot from\nthesis Figure 43]")
+
+notes(s,
+    "The most substantive original contribution is Pulsefy AI, a "
+    "custom LSTM music generator I trained from scratch. Building "
+    "this myself rather than only plugging in Meta's MusicGen meant "
+    "I had to implement the full pipeline — MIDI preprocessing and "
+    "tokenisation, the PyTorch training loop on Apple Metal, and "
+    "subprocess integration with the Node backend. Inference is fast "
+    "enough that the free tier feels instant, which was the design goal."
 )
 
 
 # ====================================================================
-# SLIDE 6 — Training numbers
+# SLIDE 7 — Training methodology
 # ====================================================================
 s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "Training Pulsefy AI",
-         size=32, bold=True, color=INK)
+slide_header(s, "Training methodology and results")
 
-# Big numbers in a 4-column row
-def stat(x, label, value, sub):
-    add_text(s, x, 2.6, 3.0, 0.5, label,
-             size=14, color=MUTED, align=PP_ALIGN.CENTER)
-    add_text(s, x, 3.1, 3.0, 1.0, value,
-             size=42, bold=True, color=VIOLET, align=PP_ALIGN.CENTER)
-    add_text(s, x, 4.5, 3.0, 0.5, sub,
-             size=12, color=MUTED, align=PP_ALIGN.CENTER, italic=True)
+text(s, 1.0, 1.85, 11.3, 0.5,
+     "Pulsefy AI was trained on a curated MIDI corpus over thirty epochs.",
+     size=14, color=MUTED, italic=True)
 
-stat(0.5,  "Input corpus",  "1,034",   "MIDI files")
-stat(3.6,  "Tokens",        "573,692", "after preprocessing")
-stat(6.7,  "Parameters",    "908,708", "across 2 LSTM layers")
-stat(9.8,  "Training",      "30",      "epochs on Apple MPS")
-
-add_text(s, 1.0, 5.8, 11.3, 0.5,
-         "Validation loss converged from 0.51 to 0.43 within the first three epochs.",
-         size=15, color=INK, align=PP_ALIGN.CENTER, italic=True)
-
-set_speaker_notes(s,
-    "The training corpus was 1,034 MIDI files parsed into 573,692 tokens. "
-    "The model has roughly 908 thousand parameters across two LSTM layers "
-    "with a 256-unit hidden dimension. Training ran for 30 epochs on "
-    "Apple Metal acceleration, and the validation loss converged from "
-    "approximately 0.51 to 0.43 within the first three epochs, "
-    "confirming the model fits the dataset."
-)
-
-
-# ====================================================================
-# SLIDE 7 — Tier strategy
-# ====================================================================
-s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "Honest tier separation",
-         size=32, bold=True, color=INK)
-
-add_text(s, 1.0, 1.8, 11.5, 0.5,
-         "Free is functional. Premium adds quality, not access.",
-         size=18, color=MUTED, italic=True)
-
-# Two cards side by side
-def card(x, header, header_color, body_lines):
-    shape = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-                               Inches(x), Inches(2.8), Inches(5.5), Inches(3.8))
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = WHITE
-    shape.line.color.rgb = header_color
-    shape.line.width = Pt(2)
-
-    add_text(s, x + 0.3, 3.0, 5.0, 0.5, header,
-             size=22, bold=True, color=header_color)
-
-    tb = add_text(s, x + 0.3, 3.7, 5.0, 0.4, body_lines[0],
-                  size=14, color=INK)
-    for line in body_lines[1:]:
-        add_paragraph_run(tb, "")
-        add_paragraph_run(tb, line, size=14, color=INK)
-
-card(0.6, "Free  ·  Pulsefy AI", VIOLET, [
-    "Custom LSTM, 908k params",
-    "~3–7 seconds per track",
-    "No third-party dependency",
-])
-card(7.2, "Premium  ·  MusicGen", RGBColor(0xF9, 0x73, 0x16), [
-    "Meta audiocraft, balanced quality",
-    "~5–7 minutes per track on CPU",
-    "Multilingual voiceover unlocked too",
-])
-
-set_speaker_notes(s,
-    "The tier separation is honest rather than feature-gated. "
-    "Free users get Pulsefy AI, which is instant but acoustically simpler. "
-    "Premium users get Meta's MusicGen, which produces higher-quality "
-    "output but takes minutes per request and unlocks non-English voiceover. "
-    "Both engines are real options. The free tier is not a teaser."
-)
-
-
-# ====================================================================
-# SLIDE 8 — Live demo / Sound Studio screenshot
-# ====================================================================
-s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "Sound Studio: the single authoring surface",
-         size=30, bold=True, color=INK)
-
-add_image_placeholder(s, 1.0, 1.8, 11.3, 5.2,
-    "[Insert: Sound Studio screenshot — the Music tab with Pulsefy AI vs MusicGen selector]")
-
-set_speaker_notes(s,
-    "This is the Sound Studio, the single authoring surface. Four tabs — "
-    "Music, Voiceover, Video, and Upload — mirror the four AI subsystems. "
-    "Users move through them at their own pace, can pick a Jamendo "
-    "Creative Commons track instead of generating one, and can upload "
-    "their own video for the audio-overlay path."
-)
-
-
-# ====================================================================
-# SLIDE 9 — Benchmark result
-# ====================================================================
-s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "How fast it actually is",
-         size=32, bold=True, color=INK)
-
-add_text(s, 1.0, 1.9, 11.5, 0.5,
-         "Three Instagram Reel scenarios, measured on Mac M2 Pro:",
-         size=16, color=MUTED, italic=True)
-
-# Three big rows: manual / free / premium
-def row(y, label, value, sub, color):
-    add_text(s, 1.0, y, 5.0, 0.6, label,
-             size=20, color=INK, anchor=MSO_ANCHOR.MIDDLE)
-    add_text(s, 6.0, y, 3.8, 0.6, value,
-             size=36, bold=True, color=color, anchor=MSO_ANCHOR.MIDDLE)
-    add_text(s, 9.9, y, 3.0, 0.6, sub,
-             size=14, color=MUTED, italic=True, anchor=MSO_ANCHOR.MIDDLE)
-
-row(3.0, "Manual workflow",  "~8 hours",        "baseline",    MUTED)
-row(4.3, "Pulsefy free",      "~3 min 11 s",    "≈ 150× faster", VIOLET)
-row(5.6, "Pulsefy premium",   "~9 min 12 s",    "≈ 52× faster",  RGBColor(0xF9, 0x73, 0x16))
-
-set_speaker_notes(s,
-    "I benchmarked the platform on a Mac M2 Pro across three Instagram "
-    "Reel scenarios, each with a different product theme. The free-tier "
-    "pipeline finishes a complete ad in about three minutes — roughly "
-    "one hundred and fifty times faster than the eight-hour manual baseline. "
-    "The premium tier finishes in nine minutes, slower because "
-    "MusicGen takes the bulk of the time, but still over fifty times "
-    "faster than the manual path."
-)
-
-
-# ====================================================================
-# SLIDE 10 — Architecture overview
-# ====================================================================
-s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "Architecture",
-         size=32, bold=True, color=INK)
-
-add_text(s, 1.0, 1.8, 11.5, 0.5,
-         "Thin web tier, heavy work in spawned subprocesses",
-         size=16, color=MUTED, italic=True)
-
-add_image_placeholder(s, 1.0, 2.6, 11.3, 4.4,
-    "[Insert: Pulsefy architecture block diagram — Figure 22 from Chapter 4]")
-
-set_speaker_notes(s,
-    "Architecturally, Pulsefy is a thin Express server backed by PostgreSQL. "
-    "The heavy work happens in spawned subprocesses: Python for MusicGen, "
-    "Pulsefy AI, and gTTS, plus FFmpeg for video. External APIs cover "
-    "image generation through Pollinations.ai and the licensed music "
-    "catalog through Jamendo. This keeps the web tier responsive while "
-    "the generations run in the background."
-)
-
-
-# ====================================================================
-# SLIDE 11 — Future work
-# ====================================================================
-s = add_slide()
-add_accent_bar(s, 1.0, 0.9, 0.08, 0.5, VIOLET)
-add_text(s, 1.2, 0.8, 11.5, 0.7,
-         "What's next",
-         size=32, bold=True, color=INK)
-
-def fut(x, y, w, label, body):
-    add_text(s, x, y, w, 0.4, label,
-             size=18, bold=True, color=VIOLET)
-    add_text(s, x, y + 0.5, w, 1.5, body,
-             size=14, color=INK)
-
-fut(1.0, 2.4, 5.5, "GPU-backed inference",
-    "Reduce MusicGen latency from minutes to seconds with a worker pool on GPU hardware.")
-fut(6.8, 2.4, 5.5, "Larger validation study",
-    "N ≥ 20 listeners with MUSHRA scoring and Fréchet Audio Distance against a reference catalog.")
-
-fut(1.0, 4.4, 5.5, "Mobile-responsive layout",
-    "Meet creators on the device they shoot their content on.")
-fut(6.8, 4.4, 5.5, "Real payment processing",
-    "Replace the simulated tier upgrade with a Stripe-backed subscription flow.")
-
-fut(1.0, 6.2, 11.3, "Multi-language interface  +  expanded Pulsefy AI training corpus beyond Nottingham folk MIDI",
-    "")
-
-set_speaker_notes(s,
-    "Five concrete next steps: GPU-backed inference to remove the "
-    "MusicGen latency bottleneck; a larger validation study with at "
-    "least twenty listeners and a quality metric like Fréchet Audio "
-    "Distance; a mobile-responsive layout; real payment processing; "
-    "and expanded training data for Pulsefy AI beyond folk music. "
-    "Each of these is achievable in a few weeks of focused work."
-)
-
-
-# ====================================================================
-# SLIDE 12 — Thank you / Q&A
-# ====================================================================
-s = add_slide()
-add_accent_bar(s, 0, 3.4, 13.333, 0.04)
-add_text(s, 0.5, 2.6, 12.3, 1.4,
-         "Thank you.",
-         size=72, bold=True, color=INK, align=PP_ALIGN.CENTER)
-add_text(s, 0.5, 4.0, 12.3, 0.8,
-         "Questions?",
-         size=32, color=VIOLET, align=PP_ALIGN.CENTER, italic=True)
-
-add_text(s, 0.5, 6.5, 12.3, 0.4,
-         "Vlad DUMITRU  ·  Pulsefy  ·  UPB FILS 2026",
+def stat_col(x, label, value, sub):
+    text(s, x, 2.7, 3.0, 0.4, label,
          size=12, color=MUTED, align=PP_ALIGN.CENTER)
+    text(s, x, 3.15, 3.0, 1.0, value,
+         size=38, bold=True, color=VIOLET, align=PP_ALIGN.CENTER)
+    text(s, x, 4.5, 3.0, 0.5, sub,
+         size=11, color=MUTED, align=PP_ALIGN.CENTER, italic=True)
 
-set_speaker_notes(s,
-    "Thank you for your attention. I'm happy to answer questions."
+stat_col(0.4,  "Input corpus", "1,034",   "MIDI files (folk + Christmas)")
+stat_col(3.6,  "Tokens",       "573,692", "after preprocessing")
+stat_col(6.7,  "Parameters",   "908,708", "2 LSTM layers, 256 hidden")
+stat_col(9.8,  "Epochs",       "30",      "on Apple Metal (MPS)")
+
+card(s, 1.0, 5.3, 11.3, 1.6)
+text(s, 1.4, 5.45, 10.5, 0.5,
+     "Convergence",
+     size=13, bold=True, color=VIOLET)
+text(s, 1.4, 5.9, 10.5, 1.0,
+     "Validation loss converged from approximately 0.51 at epoch 1 to "
+     "approximately 0.43 by epoch 3, indicating the model fit the "
+     "dataset early and continued to improve over the full training "
+     "run. The final checkpoint ships with the application.",
+     size=12, color=INK)
+
+notes(s,
+    "The training corpus was 1,034 MIDI files, parsed into 573,692 "
+    "tokens, used to train an LSTM with roughly 908 thousand parameters "
+    "across two recurrent layers. Training ran for 30 epochs on Apple "
+    "Metal hardware. Validation loss converged from 0.51 to 0.43 in "
+    "the first three epochs, which indicates the architecture fits "
+    "the dataset cleanly. The final checkpoint ships with the application."
+)
+
+
+# ====================================================================
+# SLIDE 8 — Tier model
+# ====================================================================
+s = add_slide()
+slide_header(s, "Tier model: functional free, quality-gated premium")
+
+text(s, 1.0, 1.9, 11.3, 0.5,
+     "The premium tier does not unlock new feature categories; it "
+     "substitutes higher-quality engines for the same workflows.",
+     size=14, color=MUTED, italic=True)
+
+def tier_card(x, header, color, body_lines):
+    card(s, x, 2.9, 5.5, 3.8, border=color, border_w=2.0)
+    text(s, x + 0.3, 3.1, 5.0, 0.5, header,
+         size=20, bold=True, color=color)
+    y = 3.8
+    for line in body_lines:
+        text(s, x + 0.3, y, 5.0, 0.6, line,
+             size=13, color=INK)
+        y += 0.7
+
+tier_card(0.6, "Free  ·  Pulsefy AI", GREEN, [
+    "Custom LSTM (908k parameters)",
+    "Music generation in 3–7 seconds",
+    "English voiceover via gTTS",
+    "Three scene images per ad",
+])
+tier_card(7.2, "Premium  ·  MusicGen", ORANGE, [
+    "Meta audiocraft (balanced quality)",
+    "Music generation in 5–7 minutes",
+    "Voiceover in dozens of languages",
+    "Up to four scene images per ad",
+])
+
+notes(s,
+    "The tier model is deliberately quality-gated rather than feature-"
+    "gated. Free users get the Pulsefy AI engine, instant but "
+    "acoustically simpler, with English voiceover and three scene "
+    "images. Premium users substitute Meta's MusicGen, slower but "
+    "higher quality, and unlock multilingual voiceover and the fourth "
+    "scene. The free tier is functionally complete — it is not a trial."
+)
+
+
+# ====================================================================
+# SLIDE 9 — Sound Studio screenshot
+# ====================================================================
+s = add_slide()
+slide_header(s, "The Sound Studio")
+
+text(s, 1.0, 1.85, 11.3, 0.9,
+     "Four tabs correspond to the four AI subsystems. The user moves "
+     "between them at their own pace and the underlying session state "
+     "persists across navigations.",
+     size=13, color=MUTED, italic=True)
+
+image_placeholder(s, 1.0, 2.95, 11.3, 4.0,
+    "[Insert: Sound Studio screenshot — Music tab with the\n"
+    "Pulsefy AI vs MusicGen selector visible]")
+
+notes(s,
+    "This is the Sound Studio, the central authoring surface. Four "
+    "tabs — Music, Voiceover, Video, and Upload — correspond to the "
+    "four AI subsystems. The session state persists as the user moves "
+    "between tabs, so they can generate the music and the voiceover "
+    "separately and combine them in the Video tab without losing "
+    "their work."
+)
+
+
+# ====================================================================
+# SLIDE 10 — Performance benchmark
+# ====================================================================
+s = add_slide()
+slide_header(s, "Performance benchmark")
+
+text(s, 1.0, 1.85, 11.3, 0.5,
+     "Three Instagram Reel scenarios, measured on Mac M2 Pro.",
+     size=14, color=MUTED, italic=True)
+
+def benchrow(y, label, value, sub, color):
+    card(s, 1.0, y, 11.3, 0.85)
+    text(s, 1.3, y + 0.05, 4.5, 0.75, label,
+         size=15, color=INK, anchor=MSO_ANCHOR.MIDDLE)
+    text(s, 5.8, y + 0.05, 3.5, 0.75, value,
+         size=22, bold=True, color=color,
+         anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.CENTER)
+    text(s, 9.5, y + 0.05, 2.7, 0.75, sub,
+         size=11, color=MUTED, italic=True,
+         anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.RIGHT)
+
+benchrow(2.85, "Manual workflow (Canva + Suno + ElevenLabs + CapCut)",
+         "~8 hours", "baseline", MUTED)
+benchrow(3.95, "Pulsefy free tier (Pulsefy AI music)",
+         "~3 min 11 s", "instant feedback loop", GREEN)
+benchrow(5.05, "Pulsefy premium tier (MusicGen music)",
+         "~9 min 12 s", "MusicGen dominates the time", ORANGE)
+
+text(s, 1.0, 6.3, 11.3, 0.6,
+     "Quality assessment was out of scope for the thesis benchmark. "
+     "A larger listening study with objective audio metrics is identified "
+     "as future work.",
+     size=11, color=MUTED, italic=True, align=PP_ALIGN.LEFT)
+
+notes(s,
+    "I benchmarked the platform on a Mac M2 Pro across three Instagram "
+    "Reel scenarios. The free-tier pipeline completes a full ad in "
+    "around three minutes; the premium tier takes about nine minutes, "
+    "with MusicGen accounting for most of that time. Quality assessment "
+    "of the generated content is out of scope for this benchmark — "
+    "the goal here was to verify the latency claim from Chapter 1."
+)
+
+
+# ====================================================================
+# SLIDE 11 — Limitations + Future work
+# ====================================================================
+s = add_slide()
+slide_header(s, "Limitations and future work")
+
+# Limitations column
+text(s, 1.0, 1.85, 5.5, 0.5, "Current limitations",
+     size=16, bold=True, color=ORANGE)
+def lim(y, head, body):
+    text(s, 1.0, y, 5.5, 0.35, head, size=12, bold=True, color=INK)
+    text(s, 1.0, y + 0.35, 5.5, 0.7, body, size=11, color=MUTED)
+lim(2.5, "Benchmark scope",
+    "N=3, single hardware, latency-only (no quality assessment).")
+lim(3.75, "MusicGen latency",
+    "5–7 minutes per request on CPU is the slowest stage of the pipeline.")
+lim(5.0, "Desktop-only UI",
+    "The four-tab Sound Studio expects a desktop-class viewport.")
+lim(6.25, "Simulated subscriptions",
+    "Premium upgrade is self-service without a real payment processor.")
+
+# Future work column
+text(s, 7.0, 1.85, 5.5, 0.5, "Future work",
+     size=16, bold=True, color=VIOLET)
+def fw(y, head, body):
+    text(s, 7.0, y, 5.5, 0.35, head, size=12, bold=True, color=INK)
+    text(s, 7.0, y + 0.35, 5.5, 0.7, body, size=11, color=MUTED)
+fw(2.5, "GPU-backed inference",
+    "Worker pool on GPU hardware to reduce MusicGen latency to seconds.")
+fw(3.75, "Larger validation study",
+    "N≥20 listeners, MUSHRA scoring, Fréchet Audio Distance for quality.")
+fw(5.0, "Mobile-responsive UI",
+    "Meet creators on the device they shoot their content on.")
+fw(6.25, "Production payment + multi-language UI",
+    "Stripe integration; Romanian and other regional language support.")
+
+notes(s,
+    "Four current limitations: the benchmark is small, MusicGen latency "
+    "dominates the premium pipeline, the UI is desktop-only, and "
+    "premium upgrades are simulated. Four corresponding future-work "
+    "items address each of these: GPU-backed inference for MusicGen, "
+    "a larger listening study with objective quality metrics, a "
+    "mobile-responsive layout, and integration with a real payment "
+    "processor along with multi-language UI support."
+)
+
+
+# ====================================================================
+# SLIDE 12 — Closing
+# ====================================================================
+s = add_slide()
+accent_bar(s, 0, 3.4, 13.333, 0.04, VIOLET)
+text(s, 0.5, 2.7, 12.3, 1.0, "Thank you for your attention.",
+     size=44, bold=True, color=INK, align=PP_ALIGN.CENTER)
+text(s, 0.5, 4.0, 12.3, 0.6, "I welcome your questions.",
+     size=22, color=VIOLET, align=PP_ALIGN.CENTER, italic=True)
+text(s, 0.5, 6.7, 12.3, 0.4,
+     "Vlad DUMITRU  ·  Pulsefy  ·  UPB FILS 2026",
+     size=11, color=MUTED, align=PP_ALIGN.CENTER)
+
+notes(s,
+    "Thank you for your attention. I welcome your questions."
 )
 
 
